@@ -1,0 +1,84 @@
+{
+    "categories": [
+        {
+            "id": "ex_rent",
+            "name": "Rent",
+            "type": "expense"
+        },
+        {
+            "id": "ex_car",
+            "name": "Car",
+            "type": "expense"
+        },
+        {
+            "id": "ex_travel",
+            "name": "Travel",
+            "type": "expense"
+        },
+        {
+            "id": "ex_entertainment",
+            "name": "Entertainment",
+            "type": "expense"
+        },
+        {
+            "id": "ex_bills",
+            "name": "Bills",
+            "type": "expense"
+        },
+        {
+            "id": "ex_personal",
+            "name": "Personal",
+            "type": "expense"
+        },
+        {
+            "id": "ex_groceries",
+            "name": "Groceries",
+            "type": "expense"
+        },
+        {
+            "id": "ex_shopping",
+            "name": "Shopping",
+            "type": "expense"
+        },
+        {
+            "id": "ex_other",
+            "name": "Other",
+            "type": "expense"
+        },
+        {
+            "id": "in_salary",
+            "name": "Salary",
+            "type": "income"
+        },
+        {
+            "id": "in_business",
+            "name": "Business",
+            "type": "income"
+        },
+        {
+            "id": "in_other",
+            "name": "Other",
+            "type": "income"
+        }
+    ],
+    "currencies": [
+        {
+            "id": "aud",
+            "name": "Australian Dollar",
+            "symbol": "A$"
+        },
+        {
+            "id": "eur",
+            "name": "Euro",
+            "symbol": "€"
+        },
+        {
+            "id": "usd",
+            "name": "US Dollar",
+            "symbol": "$"
+        }
+    ],
+    "transactions": [
+
+    ]
+}

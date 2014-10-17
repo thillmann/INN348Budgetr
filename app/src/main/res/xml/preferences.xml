@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/pref_general_title"
+        android:key="pref_general_settings">
+        <ListPreference
+            android:title="@string/pref_title_currency"
+            android:key="pref_currency"
+            android:entries="@array/currencies"
+            android:entryValues="@array/currencies_alias" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/pref_security_title"
+        android:key="pref_security_settings">
+        <CheckBoxPreference
+            android:key="pref_password_enabled"
+            android:summary="@string/pref_summary_password"
+            android:title="@string/pref_title_password"
+            android:defaultValue="false" />
+        <com.mad.qut.budgetr.ui.widget.PasswordDialogPreference
+            android:dependency="pref_password_enabled"
+            android:key="pref_password"
+            android:title="@string/pref_title_set_password" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <LinearLayout
+                style="@style/FloatingLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:text="@string/label_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/LabelStyle" />
+
+                <EditText
+                    android:id="@+id/description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                style="@style/FloatingLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:text="@string/label_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/LabelStyle" />
+
+                <EditText
+                    android:id="@+id/amount"
+                    android:text="$0.00"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cursorVisible="false"
+                    android:nextFocusUp="@id/amount"
+                    android:nextFocusLeft="@id/amount"
+                    android:textSize="45sp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top">
+
+                <Button
+                    android:id="@+id/button_date"
+                    android:text="@string/button_date"
+                    android:drawableTop="@drawable/ic_calendar"
+                    android:drawablePadding="8dp"
+                    android:onClick="openDatePicker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@style/RaisedButtonStyle" />
+
+                <Button
+                    android:id="@+id/button_repeating"
+                    android:text="@string/never"
+                    style="@style/RaisedButtonStyle"
+                    android:onClick="openRepeatPicker"
+                    android:drawableTop="@drawable/ic_repeat"
+                    android:drawablePadding="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+
+            <GridLayout
+                android:id="@+id/categories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="1"
+                android:layout_marginTop="16dp">
+
+            </GridLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboard_view"
+        android:background="@color/transparent"
+        android:keyBackground="@drawable/numpad_background"
+        android:keyTextColor="@color/body_text_1_inverse"
+        android:keyTextSize="32sp"
+        android:shadowColor="@color/transparent"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="gone" />
+
+</RelativeLayout>

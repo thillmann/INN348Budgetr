@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Budgetr</string>
+
+    <!-- Menu -->
+    <string name="action_settings">Settings</string>
+    <string name="action_add">Add Transaction</string>
+    <string name="action_accounts">Accounts</string>
+    <string name="action_submit">Submit</string>
+
+    <!-- Tabs -->
+    <string name="title_overview">Overview</string>
+    <string name="title_transaction_history">Transactions</string>
+    <string name="title_budgets">Budgets</string>
+
+    <!-- Preferences -->
+    <string name="pref_general_title">General</string>
+    <string name="pref_title_currency">Default Currency</string>
+    <string name="title_settings">Settings</string>
+    <string name="pref_security_title">Security</string>
+    <string name="pref_title_password">Password Protection</string>
+    <string name="pref_summary_password">Enable password protection</string>
+    <string name="pref_title_set_password">Set Password</string>
+    <string name="pref_title_change_password">Change Password</string>
+    <string name="pref_summary_change_password">Description</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_enter_password_title">Enter your password</string>
+    <string name="dialog_enter_password_message">Message</string>
+    <string name="dialog_pick_repeat">Repeating</string>
+    <string name="dialog_pick_reminder">Reminder</string>
+
+    <!-- Toasts -->
+    <string name="toast_password_failed">You have entered the wrong password!</string>
+    <string name="title_activity_my">MyActivity</string>
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+    <string name="label_amount">Amount</string>
+    <string name="hint_amount">Amount</string>
+    <string name="button_edit_transaction">Submit Changes</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_repeating">Not Repeating</string>
+    <string name="button_reminder">No Reminder</string>
+    <string name="income">Income</string>
+    <string name="expense">Expense</string>
+    <string name="label_description">Description</string>
+    <string name="button_date">Set Date</string>
+    <string name="never">Never</string>
+    <string name="title_activity_accounts">AccountsActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_add_budget">Add Budget</string>
+    <string name="receipt_scanner">Receipt Scanner</string>
+    <string name="no_category">Please select a category</string>
+    <string name="no_amount">Please enter an amount</string>
+
+    <string-array name="currencies">
+        <item>Euro</item>
+        <item>US Dollar</item>
+        <item>Australian Dollar</item>
+        <item>British Pound</item>
+    </string-array>
+    <string-array name="currencies_alias">
+        <item>EUR</item>
+        <item>USD</item>
+        <item>AUD</item>
+        <item>GBP</item>
+    </string-array>
+
+    <string-array name="repeats">
+        <item>Never</item>
+        <item>Every day</item>
+        <item>Every week</item>
+        <item>Every two weeks</item>
+        <item>Every month</item>
+        <item>Every year</item>
+    </string-array>
+    <string-array name="repeats_alias">
+        <item>none</item>
+        <item>daily</item>
+        <item>weekly</item>
+        <item>biweekly</item>
+        <item>monthly</item>
+        <item>yearly</item>
+    </string-array>
+
+
+    <string-array name="reminders">
+        <item>Never</item>
+        <item>1 day before</item>
+        <item>2 days before</item>
+        <item>3 days before</item>
+        <item>4 days before</item>
+        <item>5 days before</item>
+        <item>6 days before</item>
+        <item>7 days before</item>
+    </string-array>
+    <string-array name="reminders_alias">
+        <item>none</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+    </string-array>
+
+    <string name="title_activity_add_budget">Add Budget</string>
+    <string name="title_activity_edit_budget">Edit Budget</string>
+    <string name="no_transactions">No transactions found.</string>
+    <string name="label_name">Name</string>
+    <string name="no_budgets">No budgets.</string>
+
+</resources>
