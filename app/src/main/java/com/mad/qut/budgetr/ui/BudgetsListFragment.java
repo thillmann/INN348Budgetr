@@ -32,6 +32,7 @@ import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.utils.CircleImage;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.melnykov.fab.FloatingActionButton;
 
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -52,6 +53,8 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         View root = inflater.inflate(R.layout.fragment_budgets_list, container, false);
         mListView = (ListView) root.findViewById(R.id.budgets_list_view);
         mEmptyView = root.findViewById(android.R.id.empty);
+        FloatingActionButton addButton = (FloatingActionButton) root.findViewById(R.id.add);
+        addButton.attachToListView(mListView);
         displayListView();
         return root;
     }
@@ -70,7 +73,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         boolean isEmpty = data.getCount() == 0;
         mListAdapter.swapCursor(data);
         mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-
     }
 
     @Override
@@ -198,9 +200,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             TextView mTimeSpan = (TextView) view.findViewById(R.id.time_span);
             TextView mAmountSpent = (TextView) view.findViewById(R.id.amount_spent);
 
-            Bitmap bm = BitmapFactory.decodeResource(getResources(), Category.getIcon(cursor.getString(BudgetQuery.CATEGORY_ID)));
-            Bitmap roundBm = CircleImage.getRoundedShape(bm);
-            mCategoryIcon.setImageBitmap(roundBm);
+            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(BudgetQuery.CATEGORY_ID), 48));
 
             mName.setText(cursor.getString(BudgetQuery.NAME));
 

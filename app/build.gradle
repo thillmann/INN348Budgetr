@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:support-v13:20.0.0'
     compile project(':gson-2.3')
     compile project(':mpandroidchartlibrary-1-7-1')
+    compile 'com.melnykov:floatingactionbutton:1.0.4'
 }

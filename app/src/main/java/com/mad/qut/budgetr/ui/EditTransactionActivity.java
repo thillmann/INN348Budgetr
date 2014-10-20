@@ -11,58 +11,40 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.BaseColumns;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.GridLayout;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.mad.qut.budgetr.R;
-import com.mad.qut.budgetr.model.Category;
 import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
-import com.mad.qut.budgetr.ui.widget.NumPad;
+import com.mad.qut.budgetr.ui.widget.CategoryGridAdapter;
+import com.mad.qut.budgetr.ui.widget.CategoryGridView;
+import com.mad.qut.budgetr.ui.widget.CurrencyEditText;
 import com.mad.qut.budgetr.utils.DateUtils;
 
-import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 public class EditTransactionActivity extends BaseActivity implements DatePickerDialog.OnDateSetListener, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String TAG = EditTransactionActivity.class.getSimpleName();
 
-    private NumPad mNumPad;
-    private EditText mEditAmount;
+    private CurrencyEditText mAmountEdit;
     private Button mButtonDate;
     private Button mButtonRepeating;
     private Button mButtonReminder;
-    private GridLayout mCategories;
+    private CategoryGridView mCategoriesGrid;
+
+    private CategoryGridAdapter mGridAdapter;
+
     private Transaction mTransaction;
-    private View.OnClickListener mCategoryOnClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            for (int i = 0; i < mButtons.size(); i++) {
-                mButtons.get(i).setBackgroundColor(Color.TRANSPARENT);
-            }
-            mTransaction.category = view.getContentDescription() + "";
-            view.setBackgroundColor(getResources().getColor(R.color.button_background_pressed));
-        }
-    };
-    private List<Button> mButtons = new ArrayList<Button>();
+
     private Uri updateUri;
     private Activity mActivity = this;
 
@@ -71,28 +53,26 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transaction);
 
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
         mTransaction = Transaction.fromJSON(getIntent().getStringExtra("transaction"));
 
         updateUri = getIntent().getParcelableExtra(FinanceContract.Transactions.CONTENT_ITEM_TYPE);
 
-        mNumPad = new NumPad(this, R.id.keyboard_view, R.xml.numpad);
+        assignViews();
 
-        mEditAmount = (EditText) findViewById(R.id.amount);
-        setEditAmount();
+        displayCategories();
+    }
 
-        mCategories = (GridLayout) findViewById(R.id.categories);
-
+    private void assignViews() {
+        mAmountEdit = (CurrencyEditText) findViewById(R.id.amount);
+        mAmountEdit.setText(mTransaction.amount*10+"");
         mButtonDate = (Button) findViewById(R.id.button_date);
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
-
         mButtonRepeating = (Button) findViewById(R.id.button_repeating);
-        // TODO: get real string from array
         mButtonRepeating.setText(mTransaction.repeat);
-
         mButtonReminder = (Button) findViewById(R.id.button_reminder);
-        // TODO: get real string from array
         mButtonReminder.setText(mTransaction.reminder);
-
         Button mDelete = (Button) findViewById(R.id.delete);
         mDelete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,9 +82,8 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
                 mActivity.finish();
             }
         });
-
-        getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
-
+        mAmountEdit = (CurrencyEditText) findViewById(R.id.amount);
+        mCategoriesGrid = (CategoryGridView) findViewById(R.id.categories);
     }
 
     @Override
@@ -127,18 +106,18 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_submit) {
-            if (mTransaction.category.equals("")) {
-                Toast.makeText(this, R.string.no_category, Toast.LENGTH_LONG).show();
+            if (mAmountEdit.getCurrencyValue() == 0) {
+                Toast.makeText(this, R.string.no_amount, Toast.LENGTH_LONG).show();
                 return true;
             }
-            if (mTransaction.amount == 0) {
-                Toast.makeText(this, R.string.no_amount, Toast.LENGTH_LONG).show();
+            if (mTransaction.category.equals("")) {
+                Toast.makeText(this, R.string.no_category, Toast.LENGTH_LONG).show();
                 return true;
             }
             // INSERT INTO DB
             ContentValues values = new ContentValues();
             values.put(FinanceContract.Transactions.TRANSACTION_ID, mTransaction.id);
-            values.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, mTransaction.amount);
+            values.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, mAmountEdit.getCurrencyValue());
             values.put(FinanceContract.Transactions.TRANSACTION_DATE, mTransaction.date);
             values.put(FinanceContract.Transactions.TRANSACTION_REPEAT, mTransaction.repeat);
             values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
@@ -153,99 +132,6 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
             toggleType(item);
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (isActionBarBack()) {
-            this.finish();
-        } else {
-            if (mNumPad.isNumPadVisible()) {
-                mNumPad.hideNumPad();
-                mEditAmount.clearFocus();
-            } else {
-                this.finish();
-            }
-        }
-    }
-
-    public void setEditAmount() {
-        mEditAmount.setInputType(0);
-        mNumPad.registerEditText(mEditAmount);
-
-        String formatted = NumberFormat.getCurrencyInstance().format(mTransaction.amount);
-        mEditAmount.setText(formatted);
-
-        // TODO: Hide numpad when select start etc.
-
-        mEditAmount.addTextChangedListener(new TextWatcher() {
-            private String current = mEditAmount.getText().toString();
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                if (!editable.toString().equals(current)) {
-                    mEditAmount.removeTextChangedListener(this);
-
-                    String cleanString = editable.toString().replaceAll("[$.,]", "");
-
-                    double parsed = Double.parseDouble(cleanString);
-
-                    mTransaction.amount = parsed/100;
-
-                    // TODO: Format according to currency from settings
-                    String formatted = NumberFormat.getCurrencyInstance().format(parsed/100);
-
-                    current = formatted;
-
-                    mEditAmount.setText(formatted);
-                    mEditAmount.setSelection(formatted.length());
-
-                    mEditAmount.addTextChangedListener(this);
-                }
-            }
-        });
-    }
-
-    public void setCategories(Cursor data) {
-        // TODO: Improve button style
-        mCategories.removeAllViews();
-        data.moveToPosition(-1);
-        if (data.getCount() > 0) {
-            LinearLayout mWrapper = new LinearLayout(this);
-            mWrapper.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            while (data.moveToNext()) {
-                if (data.getPosition() % 3 == 0 && data.getPosition() > 1) {
-                    mCategories.addView(mWrapper);
-                    mWrapper = new LinearLayout(this);
-                    mWrapper.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                }
-                Button mCategory = new Button(this);
-                mCategory.setContentDescription(data.getString(CategoryQuery.CATEGORY_ID));
-                mCategory.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                mCategory.setTextAppearance(this, R.style.ButtonStyle);
-                mCategory.setBackgroundResource(R.drawable.button);
-                mCategory.setText(data.getString(CategoryQuery.NAME));
-                mCategory.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-                mCategory.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(Category.getIcon(data.getString(CategoryQuery.CATEGORY_ID))), null, null);
-                mCategory.setCompoundDrawablePadding(16);
-                if (mCategory.getContentDescription().equals(mTransaction.category)) {
-                    mCategory.setBackgroundColor(getResources().getColor(R.color.button_background_pressed));
-                }
-                mCategory.setOnClickListener(mCategoryOnClick);
-                mButtons.add(mCategory);
-                mWrapper.addView(mCategory);
-            }
-            mCategories.addView(mWrapper);
-            mCategories.setRowCount(Math.round(data.getCount() / 3));
-        }
     }
 
     private void setType(MenuItem item) {
@@ -353,10 +239,17 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
 
     }
 
+    public void displayCategories() {
+        mGridAdapter = new CategoryGridAdapter(this, null, 0, mTransaction.category);
+        mCategoriesGrid.setAdapter(mGridAdapter);
+        mCategoriesGrid.setSelection(mTransaction.category);
+        getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
         String selection = FinanceContract.Categories.CATEGORY_TYPE + "=?";
-        String[] args = { mTransaction.type };
+        String[] args = { FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE };
 
         return new CursorLoader(this,
                 FinanceContract.Categories.CONTENT_URI, CategoryQuery.PROJECTION, selection, args, FinanceContract.Categories.DEFAULT_SORT);
@@ -364,33 +257,26 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        // Swap the new cursor in.  (The framework will take care of closing the
-        // old cursor once we return.)
-        setCategories(data);
+        mGridAdapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        // This is called when the last Cursor provided to onLoadFinished()
-        // above is about to be closed.  We need to make sure we are no
-        // longer using it.
-
+        mGridAdapter.swapCursor(null);
     }
 
     private interface CategoryQuery {
         int _TOKEN = 0x1;
 
         String[] PROJECTION = {
-                BaseColumns._ID,
+                FinanceContract.Categories._ID,
                 FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Categories.CATEGORY_NAME,
-                FinanceContract.Categories.CATEGORY_TYPE
+                FinanceContract.Categories.CATEGORY_NAME
         };
 
         int _ID = 0;
         int CATEGORY_ID = 1;
         int NAME = 2;
-        int TYPE = 3;
     }
 
 }

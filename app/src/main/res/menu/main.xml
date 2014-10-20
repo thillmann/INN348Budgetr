@@ -5,21 +5,8 @@
         android:title="@string/action_settings"
         android:orderInCategory="100"
         android:showAsAction="never" />
-    <!--<item android:id="@+id/action_accounts"
-        android:title="@string/action_accounts"
-        android:orderInCategory="99"
-        android:showAsAction="never" />-->
-    <item
-        android:id="@+id/action_add_budget"
-        android:title="@string/action_add_budget"
-        android:orderInCategory="99"
-        android:showAsAction="never" />
     <item android:id="@+id/action_receipt_scanner"
         android:title="@string/receipt_scanner"
-        android:icon="@drawable/ic_receipt_scanner"
-        android:showAsAction="always" />
-    <item android:id="@+id/action_add"
-        android:title="@string/action_add"
-        android:icon="@drawable/ic_add_transaction"
+        android:icon="@drawable/ic_camera_alt_white_24dp"
         android:showAsAction="always" />
 </menu>

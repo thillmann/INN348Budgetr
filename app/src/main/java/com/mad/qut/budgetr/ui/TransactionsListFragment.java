@@ -31,6 +31,7 @@ import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.provider.FinanceProvider;
 import com.mad.qut.budgetr.utils.CircleImage;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.melnykov.fab.FloatingActionButton;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -51,6 +52,8 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
         View root = inflater.inflate(R.layout.fragment_transactions_list, container, false);
         mListView = (ListView) root.findViewById(R.id.transactions_list_view);
         mEmptyView = root.findViewById(android.R.id.empty);
+        FloatingActionButton addButton = (FloatingActionButton) root.findViewById(R.id.add);
+        addButton.attachToListView(mListView);
         displayListView();
         return root;
     }
@@ -184,9 +187,7 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
             TextView mAmount = (TextView) view.findViewById(R.id.amount);
             TextView mDate = (TextView) view.findViewById(R.id.date);
 
-            Bitmap bm = BitmapFactory.decodeResource(getResources(), Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID)));
-            Bitmap roundBm = CircleImage.getRoundedShape(bm);
-            mCategoryIcon.setImageBitmap(roundBm);
+            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID), 48));
 
             mCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
 

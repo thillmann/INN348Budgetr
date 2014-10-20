@@ -27,6 +27,7 @@ public class Category {
     }
 
     private static HashMap<String, Integer> icons = new HashMap<String, Integer>();
+    private static HashMap<String, Integer> icons48dp = new HashMap<String, Integer>();
     private static HashMap<String, Integer> colors = new HashMap<String, Integer>();
 
     private static void initIcons() {
@@ -44,6 +45,21 @@ public class Category {
         icons.put("in_other", R.drawable.icon_other);
     }
 
+    private static void initIcons48dp() {
+        icons48dp.put("ex_rent", R.drawable.icon_rent_48dp);
+        icons48dp.put("ex_car", R.drawable.icon_car_48dp);
+        icons48dp.put("ex_travel", R.drawable.icon_travel_48dp);
+        icons48dp.put("ex_groceries", R.drawable.icon_groceries_48dp);
+        icons48dp.put("ex_shopping", R.drawable.icon_shopping_48dp);
+        icons48dp.put("ex_personal", R.drawable.icon_personal_48dp);
+        icons48dp.put("ex_bills", R.drawable.icon_bills_48dp);
+        icons48dp.put("ex_entertainment", R.drawable.icon_entertainment_48dp);
+        icons48dp.put("ex_other", R.drawable.icon_other_48dp);
+        icons48dp.put("in_salary", R.drawable.icon_salary_48dp);
+        icons48dp.put("in_business", R.drawable.icon_business_48dp);
+        icons48dp.put("in_other", R.drawable.icon_other_48dp);
+    }
+
     private static void initColors() {
         colors.put("ex_rent", R.color.category_rent);
         colors.put("ex_car", R.color.category_car);
@@ -59,7 +75,13 @@ public class Category {
         colors.put("in_other", R.color.category_other);
     }
 
-    public static int getIcon(String categoryId) {
+    public static int getIcon(String categoryId, int size) {
+        if (size == 48) {
+            if (icons48dp.isEmpty()) {
+                initIcons48dp();
+            }
+            return icons48dp.get(categoryId);
+        }
         if (icons.isEmpty()) {
             initIcons();
         }

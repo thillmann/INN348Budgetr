@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.mad.qut.budgetr.R;
 
@@ -113,18 +114,6 @@ public class MainActivity extends BaseActivity {
             startActivity(iSettings);
             return true;
         }
-        if (id == R.id.action_add_budget) {
-            Intent iAddBudget = new Intent();
-            iAddBudget.setClass(this, AddBudgetActivity.class);
-            startActivity(iAddBudget);
-            return true;
-        }
-        if (id == R.id.action_add) {
-            Intent iAddTransaction = new Intent();
-            iAddTransaction.setClass(this, AddTransactionActivity.class);
-            startActivity(iAddTransaction);
-            return true;
-        }
         if (id == R.id.action_receipt_scanner) {
             Intent iReceiptScanner = new Intent();
             iReceiptScanner.setClass(this, ReceiptScannerActivity.class);
@@ -132,6 +121,18 @@ public class MainActivity extends BaseActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onAddTransactionClick(View v) {
+        Intent iAddTransaction = new Intent();
+        iAddTransaction.setClass(this, AddTransactionActivity.class);
+        startActivity(iAddTransaction);
+    }
+
+    public void onAddBudgetClick(View v) {
+        Intent iAddBudget = new Intent();
+        iAddBudget.setClass(this, AddBudgetActivity.class);
+        startActivity(iAddBudget);
     }
 
     /**
