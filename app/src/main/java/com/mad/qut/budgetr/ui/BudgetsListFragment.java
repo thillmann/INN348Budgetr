@@ -10,8 +10,10 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,23 +49,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
-        /*mListView = (ListView) inflater.inflate(R.layout.fragment_budgets_list, container, false);
-        mContext = getActivity();
-
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                Budget b = (Budget) mListView.getItemAtPosition(position);
-                Intent iBudget = new Intent();
-                iBudget.setClass(mContext, EditBudgetActivity.class);
-                iBudget.putExtra("transaction", b.toJSON());
-                startActivity(iBudget);
-            }
-        });
-
-        return mListView;*/
-
         View root = inflater.inflate(R.layout.fragment_budgets_list, container, false);
         mListView = (ListView) root.findViewById(R.id.budgets_list_view);
         mEmptyView = root.findViewById(android.R.id.empty);
@@ -85,6 +70,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         boolean isEmpty = data.getCount() == 0;
         mListAdapter.swapCursor(data);
         mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+
     }
 
     @Override
@@ -102,6 +88,40 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         // TODO: Detail View
         mListAdapter = new BudgetCursorAdapter(getActivity(), null, 0);
         mListView.setAdapter(mListAdapter);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent iBudget = new Intent();
+                iBudget.setClass(getActivity(), EditBudgetActivity.class);
+
+                Cursor cursor = (Cursor) mListView.getItemAtPosition(i);
+
+                Category category = new Category();
+                category.id = cursor.getString(BudgetQuery.CATEGORY_ID);
+                category.name = cursor.getString(BudgetQuery.CATEGORY_NAME);
+                iBudget.putExtra("category", category.toJSON());
+
+                Currency currency = new Currency();
+                currency.id = cursor.getString(BudgetQuery.CURRENCY_ID);
+                currency.symbol = cursor.getString(BudgetQuery.CURRENCY_SYMBOL);
+                iBudget.putExtra("currency", currency.toJSON());
+
+                Budget budget = new Budget();
+                budget.id = cursor.getString(BudgetQuery.BUDGET_ID);
+                budget.amount = cursor.getDouble(BudgetQuery.AMOUNT);
+                budget.name = cursor.getString(BudgetQuery.NAME);
+                budget.type = cursor.getInt(BudgetQuery.TYPE);
+                budget.startDate = cursor.getLong(BudgetQuery.START_DATE);
+                budget.category = category.id;
+                budget.currency = currency.id;
+                iBudget.putExtra("budget", budget.toJSON());
+
+                Uri updateUri = FinanceContract.Budgets.buildBudgetUri(l+"");
+                iBudget.putExtra(FinanceContract.Budgets.CONTENT_ITEM_TYPE, updateUri);
+
+                startActivity(iBudget);
+            }
+        });
         getLoaderManager().initLoader(BudgetQuery._TOKEN, null, this);
     }
 
@@ -113,31 +133,42 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
                 FinanceContract.Budgets.BUDGET_ID,
                 FinanceContract.Budgets.BUDGET_NAME,
                 FinanceContract.Budgets.BUDGET_AMOUNT,
-                FinanceContract.Budgets.BUDGET_START,
-                FinanceContract.Budgets.BUDGET_END,
-                FinanceContract.Budgets.BUDGET_REPEAT,
-                FinanceContract.Categories.CATEGORY_NAME,
+                FinanceContract.Budgets.BUDGET_TYPE,
+                FinanceContract.Budgets.BUDGET_START_DATE,
                 FinanceContract.Categories.CATEGORY_ID,
+                FinanceContract.Categories.CATEGORY_NAME,
+                FinanceContract.Currencies.CURRENCY_ID,
                 FinanceContract.Currencies.CURRENCY_SYMBOL,
-                FinanceContract.Currencies.CURRENCY_ID
         };
 
-        int _ID = 0;
-        int BUDGET_ID = 1;
-        int NAME = 2;
-        int AMOUNT = 3;
-        int START = 4;
-        int END = 5;
-        int REPEAT = 6;
-        int CATEGORY_NAME = 7;
-        int CATEGORY_ID = 8;
+        int _ID             = 0;
+        int BUDGET_ID       = 1;
+        int NAME            = 2;
+        int AMOUNT          = 3;
+        int TYPE            = 4;
+        int START_DATE      = 5;
+        int CATEGORY_ID     = 6;
+        int CATEGORY_NAME   = 7;
+        int CURRENCY_ID     = 8;
         int CURRENCY_SYMBOL = 9;
-        int CURRENCY_ID = 10;
     }
 
-    public class BudgetCursorAdapter extends CursorAdapter {
+    private interface TransactionQuery {
+        int _TOKEN = 0x2;
+
+        String[] PROJECTION = {
+                "SUM(" + FinanceContract.Transactions.TRANSACTION_AMOUNT + ")",
+                FinanceContract.Budgets.BUDGET_ID
+        };
+
+        int SUM = 0;
+        int BUDGET_ID = 1;
+    }
+
+    private class BudgetCursorAdapter extends CursorAdapter {
 
         LayoutInflater mLayoutInflater;
+        LoaderManager.LoaderCallbacks mCallback;
 
         public BudgetCursorAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -155,11 +186,12 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             b.id = cursor.getString(BudgetQuery.BUDGET_ID);
             b.name = cursor.getString(BudgetQuery.NAME);
             b.amount = cursor.getDouble(BudgetQuery.AMOUNT);
-            b.start = cursor.getLong(BudgetQuery.START);
-            b.end = cursor.getLong(BudgetQuery.END);
-            b.repeat = cursor.getString(BudgetQuery.REPEAT);
+            b.type = cursor.getInt(BudgetQuery.TYPE);
+            b.startDate = cursor.getLong(BudgetQuery.START_DATE);
             b.category = cursor.getString(BudgetQuery.CATEGORY_ID);
             b.currency = cursor.getString(BudgetQuery.CURRENCY_ID);
+
+            Log.d(TAG, b.toJSON().toString());
 
             ImageView mCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
             TextView mName = (TextView) view.findViewById(R.id.name);
@@ -172,12 +204,47 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
             mName.setText(cursor.getString(BudgetQuery.NAME));
 
-            mTimeSpan.setText(b.getTimeSpan());
-
-            if (b.willExceed()) {
-                mAmountSpent.setTextColor(getResources().getColor(R.color.expense));
+            if (b.type == FinanceContract.Budgets.BUDGET_TYPE_ENDLESS) {
+                mTimeSpan.setVisibility(View.GONE);
             }
-            mAmountSpent.setText(b.getPercentLeft() + "%");
+            mTimeSpan.setText(b.getCurrentPeriod());
+
+            new TransactionTask(mAmountSpent, b, cursor.getString(BudgetQuery._ID)).execute();
+        }
+
+        private class TransactionTask extends AsyncTask<Object, Integer, Double> {
+
+            private TextView mTextView;
+            private Budget mBudget;
+            private String mId;
+
+            public TransactionTask(TextView textView, Budget budget, String id) {
+                mTextView = textView;
+                mBudget = budget;
+                mId = id;
+            }
+
+            @Override
+            protected Double doInBackground(Object... args0) {
+                Cursor c = getActivity().getContentResolver().query(FinanceContract.Budgets.buildBudgetTransactionsUri(mId),
+                        TransactionQuery.PROJECTION,
+                        FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
+                        FinanceContract.Transactions.buildInTimeIntervalArgs(mBudget.getCurrentStartDate(), mBudget.getCurrentEndDate()),
+                        null);
+                if (c != null) {
+                    c.moveToFirst();
+                    double amountSpent = c.getDouble(TransactionQuery.SUM);
+                    c.close();
+                    return amountSpent;
+                }
+                return -1.0;
+            }
+
+            @Override
+            protected void onPostExecute(Double amountSpent) {
+                mTextView.setText(mBudget.getPercentLeft(amountSpent) + "%");
+            }
+
         }
 
     }

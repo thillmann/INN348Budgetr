@@ -32,9 +32,9 @@ public class BudgetsHandler extends JSONHandler {
             ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(uri);
             builder.withValue(FinanceContract.Budgets.BUDGET_ID, budget.id);
             builder.withValue(FinanceContract.Budgets.BUDGET_AMOUNT, budget.amount);
-            builder.withValue(FinanceContract.Budgets.BUDGET_START, budget.start);
             builder.withValue(FinanceContract.Budgets.BUDGET_NAME, budget.name);
-            builder.withValue(FinanceContract.Budgets.BUDGET_REPEAT, budget.repeat);
+            builder.withValue(FinanceContract.Budgets.BUDGET_TYPE, budget.type);
+            builder.withValue(FinanceContract.Budgets.BUDGET_START_DATE, budget.startDate);
             builder.withValue(FinanceContract.Budgets.CATEGORY_ID, budget.category);
             builder.withValue(FinanceContract.Budgets.CURRENCY_ID, budget.currency);
             list.add(builder.build());

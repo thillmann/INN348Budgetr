@@ -29,6 +29,7 @@ public class FinanceProvider extends ContentProvider {
 
     private static final int BUDGETS = 200;
     private static final int BUDGETS_ID = 201;
+    private static final int BUDGETS_ID_TRANSACTIONS = 202;
 
     private static final int CATEGORIES = 300;
     private static final int CATEGORIES_ID = 301;
@@ -52,6 +53,7 @@ public class FinanceProvider extends ContentProvider {
 
         matcher.addURI(authority, "budgets", BUDGETS);
         matcher.addURI(authority, "budgets/*", BUDGETS_ID);
+        matcher.addURI(authority, "budgets/*/transactions", BUDGETS_ID_TRANSACTIONS);
 
         matcher.addURI(authority, "categories", CATEGORIES);
         matcher.addURI(authority, "categories/*", CATEGORIES_ID);
@@ -69,7 +71,6 @@ public class FinanceProvider extends ContentProvider {
     }
 
     private void deleteDatabase() {
-        // TODO: wait for content provider operations to finish, then tear down
         mOpenHelper.close();
         Context context = getContext();
         FinanceDatabase.deleteDatabase(context);
@@ -89,6 +90,8 @@ public class FinanceProvider extends ContentProvider {
                 return Budgets.CONTENT_TYPE;
             case BUDGETS_ID:
                 return Budgets.CONTENT_ITEM_TYPE;
+            case BUDGETS_ID_TRANSACTIONS:
+                return Transactions.CONTENT_TYPE;
             case CATEGORIES:
                 return Categories.CONTENT_TYPE;
             case CATEGORIES_ID:
@@ -167,6 +170,9 @@ public class FinanceProvider extends ContentProvider {
                 Cursor cursor = builder
                         .where(selection, selectionArgs)
                         .query(db, distinct, projection, sortOrder, null);
+
+                Log.d(TAG, builder.toString());
+
                 Context context = getContext();
                 if (null != context) {
                     cursor.setNotificationUri(context.getContentResolver(), uri);
@@ -181,7 +187,6 @@ public class FinanceProvider extends ContentProvider {
             String[] selectionArgs) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
-        Log.d(TAG, "update");
         final SelectionBuilder builder = buildSimpleSelection(uri);
         int retVal = builder.where(selection, selectionArgs).update(db, values);
         notifyChange(uri);
@@ -260,14 +265,21 @@ public class FinanceProvider extends ContentProvider {
             }
             case BUDGETS: {
                 return builder.table(Tables.BUDGETS_JOIN_CATEGORIES_CURRENCIES)
-                        .mapToTable(Transactions._ID, Tables.BUDGETS)
-                        .mapToTable(Transactions.CATEGORY_ID, Tables.BUDGETS)
-                        .mapToTable(Transactions.CURRENCY_ID, Tables.BUDGETS);
+                        .mapToTable(Budgets._ID, Tables.BUDGETS)
+                        .mapToTable(Budgets.CATEGORY_ID, Tables.BUDGETS)
+                        .mapToTable(Budgets.CURRENCY_ID, Tables.BUDGETS);
             }
             case BUDGETS_ID: {
                 final String budgetId = Budgets.getBudgetId(uri);
                 return builder.table(Tables.BUDGETS)
                         .where(Budgets._ID + "=?", budgetId);
+            }
+            case BUDGETS_ID_TRANSACTIONS: {
+                final String budgetId = Budgets.getBudgetId(uri);
+                return builder.table(Tables.TRANSACTIONS_JOIN_BUDGETS)
+                        .mapToTable(Transactions._ID, Tables.TRANSACTIONS)
+                        .where(Tables.BUDGETS + "." + Budgets._ID + "=?", budgetId)
+                        .where(Transactions.TRANSACTION_TYPE + "=?", Transactions.TRANSACTION_TYPE_EXPENSE);
             }
             case CATEGORIES: {
                 return builder.table(Tables.CATEGORIES);

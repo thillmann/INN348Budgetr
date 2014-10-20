@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.mad.qut.budgetr.provider.FinanceContract;
+import com.mad.qut.budgetr.utils.DateUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -16,31 +17,90 @@ public class Budget {
 
     public String id;
     public String name;
-    public String category;
     public double amount;
-    public String repeat;
-    public long start;
-    public long end;
+    public int type;
+    public long startDate;
+    public String category;
     public String currency;
 
     public Budget() {
     }
 
-    /* DUMMY METHODS */
+    public long getCurrentStartDate() {
+        long currentStartDate = -1;
+        Calendar c = DateUtils.getClearCalendar();
+        switch (type) {
+            case FinanceContract.Budgets.BUDGET_TYPE_WEEKLY:
+                c.set(Calendar.DAY_OF_WEEK, 2);
+                currentStartDate = c.getTimeInMillis();
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_BIWEEKLY:
+                if (startDate >= c.getTimeInMillis()) {
+                    currentStartDate = startDate;
+                } else {
+                    Calendar c2 = DateUtils.getClearCalendar();
+                    c2.setTimeInMillis(startDate);
+                    do {
+                        startDate = c2.getTimeInMillis();
+                        c2.add(Calendar.WEEK_OF_YEAR, 2);
+                    } while (c2.getTimeInMillis() < c.getTimeInMillis());
+                    currentStartDate = startDate;
+                }
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_MONTHLY:
+                c.set(Calendar.DAY_OF_MONTH, 1);
+                currentStartDate = c.getTimeInMillis();
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_YEARLY:
+                c.set(Calendar.DAY_OF_YEAR, 1);
+                currentStartDate = c.getTimeInMillis();
+                break;
+        }
+        return currentStartDate;
+    }
 
-    private double amountLeft = -1;
+    public long getCurrentEndDate() {
+        long currentEndDate = -1;
+        Calendar c = DateUtils.getClearCalendar();
+        switch (type) {
+            case FinanceContract.Budgets.BUDGET_TYPE_WEEKLY:
+                c.set(Calendar.DAY_OF_WEEK, 7);
+                c.add(Calendar.DAY_OF_MONTH, 1);
+                currentEndDate = c.getTimeInMillis();
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_BIWEEKLY:
+                c.setTimeInMillis(getCurrentStartDate());
+                c.add(Calendar.WEEK_OF_YEAR, 2);
+                c.add(Calendar.DAY_OF_YEAR, -1);
+                currentEndDate = c.getTimeInMillis();
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_MONTHLY:
+                c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+                currentEndDate = c.getTimeInMillis();
+                break;
+            case FinanceContract.Budgets.BUDGET_TYPE_YEARLY:
+                c.set(Calendar.DAY_OF_YEAR, c.getActualMaximum(Calendar.DAY_OF_YEAR));
+                currentEndDate = c.getTimeInMillis();
+                break;
+        }
+        return currentEndDate;
+    }
+
+    public String getCurrentPeriod() {
+        if (type == FinanceContract.Budgets.BUDGET_TYPE_ENDLESS) {
+            return "";
+        }
+        return DateUtils.getFormattedDate(getCurrentStartDate(), "dd/MM/yyyy") + " - "
+                + DateUtils.getFormattedDate(getCurrentEndDate(), "dd/MM/yyyy");
+    }
 
     /**
      * What's left of the budget.
      *
      * @return double
      */
-    public double getAmountLeft() {
-        if (amountLeft == -1) {
-            amountLeft = Math.random()*amount;
-        }
-        Log.d(TAG, amountLeft + "");
-        return amountLeft;
+    public double getAmountLeft(double amountSpent) {
+        return amount-amountSpent;
     }
 
     /**
@@ -48,72 +108,8 @@ public class Budget {
      *
      * @return double
      */
-    public double getPercentLeft() {
-        return Math.round(((getAmountLeft() / amount)) * 100d * 100d) / 100;
-    }
-
-    /**
-     * Determines whether or not the budget will
-     * be exceeded through linear regression.
-     *
-     * @return boolean
-     */
-    public boolean willExceed() {
-        double plannedDaily;
-        double realDaily;
-        if (FinanceContract.Transactions.TRANSACTION_REPEAT_WEEKLY.equals(repeat)) {
-            plannedDaily = amount / 7;
-        } else if (FinanceContract.Transactions.TRANSACTION_REPEAT_BIWEEKLY.equals(repeat)) {
-            plannedDaily = amount / 14;
-        } else {
-            return false;
-        }
-        realDaily = (amount - getAmountLeft()) / getDaysElapsed();
-        return realDaily > plannedDaily;
-    }
-
-    /**
-     * Calculate the amount of days that have
-     * elapsed.
-     *
-     * @return long
-     */
-    public long getDaysElapsed() {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(start *1000);
-        Calendar now = Calendar.getInstance();
-        long time = now.getTime().getTime() - c.getTime().getTime();
-        long days = Math.round((double) time / (24. * 60.*60.*1000.));
-        Log.d(TAG, days+"");
-        return days;
-    }
-
-    /**
-     * Time span of budget as string.
-     *
-     * @return String
-     */
-    public String getTimeSpan() {
-        Date d = new Date(start *1000);
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-        String result = df.format(d);
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(start *1000);
-        if (FinanceContract.Transactions.TRANSACTION_REPEAT_WEEKLY.equals(repeat)) {
-            c.add(Calendar.WEEK_OF_YEAR, 1);
-        } else if (FinanceContract.Transactions.TRANSACTION_REPEAT_BIWEEKLY.equals(repeat)) {
-            c.add(Calendar.WEEK_OF_YEAR, 2);
-        } else if (FinanceContract.Transactions.TRANSACTION_REPEAT_MONTHLY.equals(repeat)) {
-            c.add(Calendar.MONTH, 1);
-        } else if (FinanceContract.Transactions.TRANSACTION_REPEAT_YEARLY.equals(repeat)) {
-            c.add(Calendar.YEAR, 1);
-        } else {
-            return "";
-        }
-        c.add(Calendar.DAY_OF_MONTH, -1);
-        result += " - ";
-        result += df.format(c.getTime());
-        return result;
+    public double getPercentLeft(double amountSpent) {
+        return Math.round(((getAmountLeft(amountSpent) / amount)) * 100d * 100d) / 100;
     }
 
     public String toJSON() {

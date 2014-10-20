@@ -1,13 +1,8 @@
 package com.mad.qut.budgetr.ui;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
-import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -20,11 +15,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.mad.qut.budgetr.R;
@@ -35,65 +32,113 @@ import com.mad.qut.budgetr.ui.widget.NumPad;
 import com.mad.qut.budgetr.utils.DateUtils;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
-public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.OnDateSetListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class AddBudgetActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final String TAG = AddTransactionActivity.class.getSimpleName();
+    private static final String TAG = AddBudgetActivity.class.getSimpleName();
 
     private NumPad mNumPad;
-    private EditText mEditName;
-    private EditText mEditAmount;
-    private Button mButtonDate;
-    private Button mButtonRepeating;
-    private GridLayout mCategories;
+    private EditText mNameEdit;
+    private EditText mAmountEdit;
+    private Spinner mTypesSpinner;
+    private LinearLayout mStartDateField;
+    private Spinner mStartDateSpinner;
+    private GridLayout mCategoriesGrid;
 
     private Budget mBudget = new Budget();
-
-    private View.OnClickListener mCategoryOnClick = new View.OnClickListener() {
-        private View last;
-
-        @Override
-        public void onClick(View view) {
-            if (last != null) {
-                last.setBackgroundColor(Color.TRANSPARENT);
-            }
-            mBudget.category = view.getContentDescription() + "";
-            view.setBackgroundColor(getResources().getColor(R.color.button_background_pressed));
-            last = view;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_budget);
 
-        mNumPad = new NumPad(this, R.id.keyboard_view, R.xml.numpad);
+        assignViews();
 
-        mEditAmount = (EditText) findViewById(R.id.amount);
+        setDefaultValues();
+
         setEditAmount();
 
-        mCategories = (GridLayout) findViewById(R.id.categories);
+        populateBudgetTypes();
 
-        mButtonDate = (Button) findViewById(R.id.button_date);
+        getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
+    }
 
-        mButtonRepeating = (Button) findViewById(R.id.button_repeating);
+    private void assignViews() {
+        mNumPad = new NumPad(this, R.id.keyboard_view, R.xml.numpad);
+        mNameEdit = (EditText) findViewById(R.id.name);
+        mAmountEdit = (EditText) findViewById(R.id.amount);
+        mTypesSpinner = (Spinner) findViewById(R.id.type);
+        mStartDateField = (LinearLayout) findViewById(R.id.start_date_wrapper);
+        mStartDateSpinner = (Spinner) findViewById(R.id.start_date);
+        mCategoriesGrid = (GridLayout) findViewById(R.id.categories);
+    }
 
-        // default values for transaction
+    private void setDefaultValues() {
+        // default values for budget
         mBudget.amount = 0.0;
+        mBudget.type = 0;
+        mBudget.startDate = -1;
         mBudget.category = "";
         // TODO: Use currency from settings
         mBudget.currency = "aud";
-        Calendar calendar = Calendar.getInstance();
-        mBudget.start = calendar.getTime().getTime() / 1000;
-        mBudget.repeat = FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER;
+    }
 
-        // default values for inputs
-        mButtonDate.setText(DateUtils.getFormattedDate(mBudget.start, "dd/MM/yyyy"));
+    private void populateBudgetTypes() {
+        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this, R.array.budget_types, android.R.layout.simple_spinner_dropdown_item);
+        mTypesSpinner.setAdapter(spinnerAdapter);
+        mTypesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                mBudget.type = i;
+                toggleStartDateField(i);
+            }
 
-        getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+    }
+
+    private void toggleStartDateField(int i) {
+        switch (i) {
+            case FinanceContract.Budgets.BUDGET_TYPE_BIWEEKLY:
+                mStartDateField.setVisibility(View.VISIBLE);
+                populateStartDates();
+                break;
+            default:
+                mStartDateField.setVisibility(View.GONE);
+                break;
+        }
+    }
+
+    private void populateStartDates() {
+        final List<CharSequence> startingDates = new ArrayList<CharSequence>();
+        Calendar c = DateUtils.getClearCalendar();
+        // get last weeks start and next weeks start#
+        c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
+        c.add(Calendar.DAY_OF_WEEK, 1);
+        startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        c.add(Calendar.WEEK_OF_YEAR, 1);
+        startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        ArrayAdapter<CharSequence> spinnerAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_dropdown_item, startingDates);
+        mStartDateSpinner.setAdapter(spinnerAdapter);
+        mStartDateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                mBudget.startDate = DateUtils.getTimeStampFromString(startingDates.get(i).toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     @Override
@@ -121,10 +166,10 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
             // INSERT INTO DB
             ContentValues values = new ContentValues();
             values.put(FinanceContract.Budgets.BUDGET_ID, UUID.randomUUID().toString());
-            values.put(FinanceContract.Budgets.BUDGET_NAME, mBudget.name);
+            values.put(FinanceContract.Budgets.BUDGET_NAME, mNameEdit.getText().toString());
             values.put(FinanceContract.Budgets.BUDGET_AMOUNT, mBudget.amount);
-            values.put(FinanceContract.Budgets.BUDGET_START, mBudget.start);
-            values.put(FinanceContract.Budgets.BUDGET_REPEAT, mBudget.repeat);
+            values.put(FinanceContract.Budgets.BUDGET_TYPE, mBudget.type);
+            values.put(FinanceContract.Budgets.BUDGET_START_DATE, mBudget.startDate);
             values.put(FinanceContract.Budgets.CATEGORY_ID, mBudget.category);
             values.put(FinanceContract.Budgets.CURRENCY_ID, mBudget.currency);
             getContentResolver().insert(FinanceContract.Budgets.CONTENT_URI, values);
@@ -141,7 +186,7 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
         } else {
             if (mNumPad.isNumPadVisible()) {
                 mNumPad.hideNumPad();
-                mEditAmount.clearFocus();
+                mAmountEdit.clearFocus();
             } else {
                 this.finish();
             }
@@ -149,13 +194,13 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
     }
 
     public void setEditAmount() {
-        mEditAmount.setInputType(0);
-        mNumPad.registerEditText(mEditAmount);
+        mAmountEdit.setInputType(0);
+        mNumPad.registerEditText(mAmountEdit);
 
         // TODO: Hide numpad when select start etc.
 
-        mEditAmount.addTextChangedListener(new TextWatcher() {
-            private String current = mEditAmount.getText().toString();
+        mAmountEdit.addTextChangedListener(new TextWatcher() {
+            private String current = mAmountEdit.getText().toString();
 
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
@@ -168,38 +213,51 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
             @Override
             public void afterTextChanged(Editable editable) {
                 if (!editable.toString().equals(current)) {
-                    mEditAmount.removeTextChangedListener(this);
+                    mAmountEdit.removeTextChangedListener(this);
 
                     String cleanString = editable.toString().replaceAll("[$.,]", "");
 
                     double parsed = Double.parseDouble(cleanString);
 
-                    mBudget.amount = parsed/100;
+                    mBudget.amount = parsed / 100;
 
                     // TODO: Format according to currency from settings
-                    String formatted = NumberFormat.getCurrencyInstance().format(parsed/100);
+                    String formatted = NumberFormat.getCurrencyInstance().format(parsed / 100);
 
                     current = formatted;
 
-                    mEditAmount.setText(formatted);
-                    mEditAmount.setSelection(formatted.length());
+                    mAmountEdit.setText(formatted);
+                    mAmountEdit.setSelection(formatted.length());
 
-                    mEditAmount.addTextChangedListener(this);
+                    mAmountEdit.addTextChangedListener(this);
                 }
             }
         });
     }
 
     public void setCategories(Cursor data) {
+        View.OnClickListener categoryOnClick = new View.OnClickListener() {
+            private View last;
+
+            @Override
+            public void onClick(View view) {
+                if (last != null) {
+                    last.setBackgroundColor(Color.TRANSPARENT);
+                }
+                mBudget.category = view.getContentDescription() + "";
+                view.setBackgroundColor(getResources().getColor(R.color.button_background_pressed));
+                last = view;
+            }
+        };
         // TODO: Improve button style
-        mCategories.removeAllViews();
+        mCategoriesGrid.removeAllViews();
         data.moveToPosition(-1);
         if (data.getCount() > 0) {
             LinearLayout mWrapper = new LinearLayout(this);
             mWrapper.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             while (data.moveToNext()) {
                 if (data.getPosition() % 3 == 0 && data.getPosition() > 1) {
-                    mCategories.addView(mWrapper);
+                    mCategoriesGrid.addView(mWrapper);
                     mWrapper = new LinearLayout(this);
                     mWrapper.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 }
@@ -212,64 +270,12 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
                 mCategory.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
                 mCategory.setCompoundDrawablesWithIntrinsicBounds(null, getResources().getDrawable(Category.getIcon(data.getString(CategoryQuery.CATEGORY_ID))), null, null);
                 mCategory.setCompoundDrawablePadding(16);
-                mCategory.setOnClickListener(mCategoryOnClick);
+                mCategory.setOnClickListener(categoryOnClick);
                 mWrapper.addView(mCategory);
             }
-            mCategories.addView(mWrapper);
-            mCategories.setRowCount(Math.round(data.getCount() / 3));
+            mCategoriesGrid.addView(mWrapper);
+            mCategoriesGrid.setRowCount(Math.round(data.getCount() / 3));
         }
-    }
-
-    public void openDatePicker(View v) {
-        DialogFragment datePicker = new DatePickerFragment();
-        datePicker.show(getFragmentManager(), "datePicker");
-    }
-
-    public void onDateSet(DatePicker view, int year, int month, int day) {
-        Calendar c = Calendar.getInstance();
-        c.set(year, month, day);
-        mBudget.start = c.getTime().getTime() / 1000;
-        mButtonDate.setText(DateUtils.getFormattedDate(mBudget.start, "dd/MM/yyyy"));
-    }
-
-    public static class DatePickerFragment extends DialogFragment {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month = c.get(Calendar.MONTH);
-            int day = c.get(Calendar.DAY_OF_MONTH);
-
-            return new DatePickerDialog(getActivity(), (AddBudgetActivity) getActivity(), year, month, day);
-        }
-
-    }
-
-    public void openRepeatPicker(View v) {
-        DialogFragment repeatPicker = new RepeatPickerFragment();
-        repeatPicker.show(getFragmentManager(), "repeatPicker");
-    }
-
-    public void onRepeatSet(int selection) {
-        mBudget.repeat = getResources().getStringArray(R.array.repeats_alias)[selection];
-        mButtonRepeating.setText(getResources().getStringArray(R.array.repeats)[selection]);
-    }
-
-    public static class RepeatPickerFragment extends DialogFragment {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(R.string.dialog_pick_repeat)
-                    .setItems(R.array.repeats,  new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            ((AddBudgetActivity) getActivity()).onRepeatSet(which);
-                        }
-                    });
-            return builder.create();
-        }
-
     }
 
     @Override
@@ -300,16 +306,12 @@ public class AddBudgetActivity extends BaseActivity implements DatePickerDialog.
         int _TOKEN = 0x1;
 
         String[] PROJECTION = {
-                BaseColumns._ID,
                 FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Categories.CATEGORY_NAME,
-                FinanceContract.Categories.CATEGORY_TYPE
+                FinanceContract.Categories.CATEGORY_NAME
         };
 
-        int _ID = 0;
-        int CATEGORY_ID = 1;
-        int NAME = 2;
-        int TYPE = 3;
+        int CATEGORY_ID = 0;
+        int NAME = 1;
     }
 
 }

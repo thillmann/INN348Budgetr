@@ -93,7 +93,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         mTransaction.currency = "aud";
         mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
         Calendar calendar = Calendar.getInstance();
-        mTransaction.date = calendar.getTime().getTime() / 1000;
+        mTransaction.date = calendar.getTime().getTime();
         mTransaction.repeat = FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER;
         mTransaction.reminder = FinanceContract.Transactions.TRANSACTION_REMINDER_NEVER;
 
@@ -142,6 +142,8 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
             values.put(FinanceContract.Transactions.CATEGORY_ID, mTransaction.category);
             values.put(FinanceContract.Transactions.CURRENCY_ID, mTransaction.currency);
             getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, values);
+            // Notify changes for budgets
+            getContentResolver().notifyChange(FinanceContract.Budgets.CONTENT_URI, null);
             this.finish();
             return true;
         }
@@ -270,9 +272,9 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
     }
 
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        Calendar c = Calendar.getInstance();
+        Calendar c = DateUtils.getClearCalendar();
         c.set(year, month, day);
-        mTransaction.date = c.getTime().getTime() / 1000;
+        mTransaction.date = c.getTime().getTime();
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
     }
 
@@ -280,7 +282,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = Calendar.getInstance();
+            final Calendar c = DateUtils.getClearCalendar();
             int year = c.get(Calendar.YEAR);
             int month = c.get(Calendar.MONTH);
             int day = c.get(Calendar.DAY_OF_MONTH);

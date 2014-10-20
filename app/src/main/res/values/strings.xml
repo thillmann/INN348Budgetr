@@ -85,7 +85,6 @@
         <item>yearly</item>
     </string-array>
 
-
     <string-array name="reminders">
         <item>Never</item>
         <item>1 day before</item>
@@ -107,10 +106,21 @@
         <item>7</item>
     </string-array>
 
+    <string-array name="budget_types">
+        <item>Weekly budget</item>
+        <item>Biweekly budget</item>
+        <item>Monthly budget</item>
+        <item>Yearly budget</item>
+        <item>Endless budget</item>
+    </string-array>
+
     <string name="title_activity_add_budget">Add Budget</string>
     <string name="title_activity_edit_budget">Edit Budget</string>
     <string name="no_transactions">No transactions found.</string>
     <string name="label_name">Name</string>
     <string name="no_budgets">No budgets.</string>
+    <string name="label_type">Type</string>
+    <string name="label_start_date">Periods begins</string>
+    <string name="label_target">Budget target</string>
 
 </resources>

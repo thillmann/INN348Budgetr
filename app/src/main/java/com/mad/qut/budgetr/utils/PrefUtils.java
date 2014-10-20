@@ -78,6 +78,11 @@ public class PrefUtils {
         sp.edit().putBoolean(PREF_DATA_BOOTSTRAP_DONE, true).commit();
     }
 
+    public static void markDataBootstrapNecessary(final Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        sp.edit().putBoolean(PREF_DATA_BOOTSTRAP_DONE, false).commit();
+    }
+
     public static boolean isDataBootstrapDone(final Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         return sp.getBoolean(PREF_DATA_BOOTSTRAP_DONE, false);

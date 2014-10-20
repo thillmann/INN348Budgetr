@@ -5,6 +5,8 @@ import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 
+import java.util.Arrays;
+
 public class FinanceContract {
 
     private static final String TAG = FinanceContract.class.getSimpleName();
@@ -30,12 +32,11 @@ public class FinanceContract {
     }
 
     interface BudgetsColumns {
-        String BUDGET_ID        = "budget_id";
-        String BUDGET_NAME      = "budget_name";
-        String BUDGET_START     = "budget_start";
-        String BUDGET_END       = "budget_end";
-        String BUDGET_REPEAT    = "budget_repeat";
-        String BUDGET_AMOUNT    = "budget_amount";
+        String BUDGET_ID         = "budget_id";
+        String BUDGET_NAME       = "budget_name";
+        String BUDGET_TYPE       = "budget_type";
+        String BUDGET_START_DATE = "budget_start_date";
+        String BUDGET_AMOUNT     = "budget_amount";
     }
 
     interface CurrenciesColumns {
@@ -167,13 +168,22 @@ public class FinanceContract {
     public static class Budgets implements BudgetsColumns, CategoriesColumns,
             CurrenciesColumns, BaseColumns {
 
-        public static final boolean isValidBudgetRepeat(String repeat) {
-            return Transactions.TRANSACTION_REPEAT_DAILY.equals(repeat)
-                    || Transactions.TRANSACTION_REPEAT_WEEKLY.equals(repeat)
-                    || Transactions.TRANSACTION_REPEAT_BIWEEKLY.equals(repeat)
-                    || Transactions.TRANSACTION_REPEAT_MONTHLY.equals(repeat)
-                    || Transactions.TRANSACTION_REPEAT_YEARLY.equals(repeat)
-                    || Transactions.TRANSACTION_REPEAT_NEVER.equals(repeat);
+        public static final int BUDGET_TYPE_WEEKLY   = 0;
+        public static final int BUDGET_TYPE_BIWEEKLY = 1;
+        public static final int BUDGET_TYPE_MONTHLY  = 2;
+        public static final int BUDGET_TYPE_YEARLY   = 3;
+        public static final int BUDGET_TYPE_ENDLESS  = 4;
+
+        public static final int[] BUDGET_TYPES = {
+                BUDGET_TYPE_WEEKLY,
+                BUDGET_TYPE_BIWEEKLY,
+                BUDGET_TYPE_MONTHLY,
+                BUDGET_TYPE_YEARLY,
+                BUDGET_TYPE_ENDLESS
+        };
+
+        public static final boolean isValidBudgetType(int type) {
+            return Arrays.asList(BUDGET_TYPES).contains(type);
         }
 
         public static final Uri CONTENT_URI =
@@ -194,6 +204,10 @@ public class FinanceContract {
         /** Build {@link Uri} for requested {@link #BUDGET_ID}. */
         public static Uri buildBudgetUri(String budgetId) {
             return CONTENT_URI.buildUpon().appendPath(budgetId).build();
+        }
+
+        public static Uri buildBudgetTransactionsUri(String budgetId) {
+            return CONTENT_URI.buildUpon().appendPath(budgetId).appendPath(PATH_TRANSACTIONS).build();
         }
 
         /**
