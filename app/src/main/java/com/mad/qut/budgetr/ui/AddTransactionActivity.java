@@ -248,7 +248,12 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
         String selection = FinanceContract.Categories.CATEGORY_TYPE + "=?";
-        String[] args = { FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE };
+
+        String type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
+        if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
+            type = FinanceContract.Transactions.TRANSACTION_TYPE_INCOME;
+        }
+        String[] args = { type };
 
         return new CursorLoader(this,
                 FinanceContract.Categories.CONTENT_URI, CategoryQuery.PROJECTION, selection, args, FinanceContract.Categories.DEFAULT_SORT);

@@ -25,6 +25,7 @@ public class FinanceProvider extends ContentProvider {
     private static final int TRANSACTIONS = 100;
     private static final int TRANSACTIONS_ID = 101;
     private static final int TRANSACTIONS_BY_CATEGORIES = 102;
+    private static final int TRANSACTIONS_BY_DAYS = 103;
 
     private static final int BUDGETS = 200;
     private static final int BUDGETS_ID = 201;
@@ -49,6 +50,7 @@ public class FinanceProvider extends ContentProvider {
 
         matcher.addURI(authority, "transactions", TRANSACTIONS);
         matcher.addURI(authority, "transactions/categories", TRANSACTIONS_BY_CATEGORIES);
+        matcher.addURI(authority, "transactions/days", TRANSACTIONS_BY_DAYS);
         matcher.addURI(authority, "transactions/*", TRANSACTIONS_ID);
 
         matcher.addURI(authority, "budgets", BUDGETS);
@@ -83,6 +85,8 @@ public class FinanceProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case TRANSACTIONS:
+            case TRANSACTIONS_BY_CATEGORIES:
+            case TRANSACTIONS_BY_DAYS:
                 return Transactions.CONTENT_TYPE;
             case TRANSACTIONS_ID:
                 return Transactions.CONTENT_ITEM_TYPE;
@@ -118,6 +122,15 @@ public class FinanceProvider extends ContentProvider {
 
         int retVal = builder.where(selection, selectionArgs).delete(db);
         notifyChange(uri);
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case TRANSACTIONS_ID: {
+                notifyChange(Transactions.CONTENT_URI);
+            }
+            case BUDGETS_ID: {
+                notifyChange(Budgets.CONTENT_URI);
+            }
+        }
         return retVal;
     }
 
@@ -171,8 +184,6 @@ public class FinanceProvider extends ContentProvider {
                         .where(selection, selectionArgs)
                         .query(db, distinct, projection, sortOrder, null);
 
-                Log.d(TAG, builder.toString());
-
                 Context context = getContext();
                 if (null != context) {
                     cursor.setNotificationUri(context.getContentResolver(), uri);
@@ -190,6 +201,15 @@ public class FinanceProvider extends ContentProvider {
         final SelectionBuilder builder = buildSimpleSelection(uri);
         int retVal = builder.where(selection, selectionArgs).update(db, values);
         notifyChange(uri);
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case TRANSACTIONS_ID: {
+                notifyChange(Transactions.CONTENT_URI);
+            }
+            case BUDGETS_ID: {
+                notifyChange(Budgets.CONTENT_URI);
+            }
+        }
         return retVal;
     }
 
@@ -269,6 +289,13 @@ public class FinanceProvider extends ContentProvider {
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
                         .groupBy(Tables.TRANSACTIONS + "." + Transactions.CATEGORY_ID);
+            }
+            case TRANSACTIONS_BY_DAYS: {
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                        .mapToTable(Tables.TRANSACTIONS + "." + Transactions._ID, Tables.TRANSACTIONS)
+                        .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
+                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
+                        .groupBy("strftime('%d', " + Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime'), " + Transactions.TRANSACTION_TYPE);
             }
             case BUDGETS: {
                 return builder.table(Tables.BUDGETS_JOIN_CATEGORIES_CURRENCIES)

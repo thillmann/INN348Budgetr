@@ -5,15 +5,11 @@ import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.provider.BaseColumns;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import com.github.mikephil.charting.charts.BarLineChartBase;
 import com.github.mikephil.charting.charts.LineChart;
@@ -25,15 +21,12 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Category;
-import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.utils.DateUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
 
-import java.lang.reflect.MalformedParameterizedTypeException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 public class OverviewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -63,46 +56,96 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         mLineChart.setBorderPositions(new BarLineChartBase.BorderPosition[]{
                 BarLineChartBase.BorderPosition.BOTTOM
         });
-        mLineChart.setUnit(" $");
+        mLineChart.setUnit(" A$");
         mLineChart.setDrawUnitsInChart(true);
+        mLineChart.setLongClickable(false);
 
         getLoaderManager().initLoader(LineChartQuery._TOKEN, null, this);
     }
 
     private void setupLineChartData(Cursor cursor) {
-        ArrayList<String> xVals = new ArrayList<String>();
-        ArrayList<Entry> valsIncome = new ArrayList<Entry>();
-        ArrayList<Entry> valsExpenses = new ArrayList<Entry>();
+        if (cursor.getCount() > 0) {
+            ArrayList<String> xVals = new ArrayList<String>();
+            Calendar c = Calendar.getInstance();
+            for (int i = 0; i < c.getActualMaximum(Calendar.DAY_OF_MONTH); i++) {
+                c.set(Calendar.DAY_OF_MONTH, i+1);
+                xVals.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy")); //+ "/" + c.get(Calendar.MONTH)  + "/" + c.get(Calendar.YEAR)
+            }
 
-        for (int i = 0; i < 31; i++) {
-            Entry income = new Entry((float) Math.random()*100, i); // 0 == quarter 1
-            valsIncome.add(income);
-            Entry expense = new Entry((float) Math.random()*100, i); // 0 == quarter 1
-            valsExpenses.add(expense);
-            xVals.add((i+1) + "/10/2014");
+            ArrayList<Entry> valsIncome = new ArrayList<Entry>();
+            ArrayList<Entry> valsExpenses = new ArrayList<Entry>();
+
+            cursor.moveToPosition(-1);
+            while (cursor.moveToNext()) {
+                String date = cursor.getString(LineChartQuery.DATE);
+                Entry entry = new Entry(cursor.getFloat(LineChartQuery.TOTAL_AMOUNT), xVals.indexOf(date));
+                if (cursor.getString(LineChartQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
+                    valsIncome.add(entry);
+                } else {
+                    valsExpenses.add(entry);
+                }
+                Log.d(TAG, "Day: " + date);
+                Log.d(TAG, "Amount: " + cursor.getFloat(LineChartQuery.TOTAL_AMOUNT));
+                Log.d(TAG, "Type: " + cursor.getString(LineChartQuery.TYPE));
+            }
+
+            ArrayList<Entry> newValsIncome = new ArrayList<Entry>();
+            ArrayList<Entry> newValsExpenses = new ArrayList<Entry>();
+
+            // add missing
+            int j = 0;
+            int k = 0;
+            for (int i = 0; i < xVals.size(); i++) {
+                if (j < valsIncome.size()) {
+                    Entry income = valsIncome.get(j);
+                    if (income.getXIndex() != i) {
+                        Entry newIncome = new Entry(0f, i);
+                        newValsIncome.add(newIncome);
+                    } else {
+                        newValsIncome.add(income);
+                        j++;
+                    }
+                } else {
+                    Entry newIncome = new Entry(0f, i);
+                    newValsIncome.add(newIncome);
+                }
+                if (k < valsExpenses.size()) {
+                    Entry expense = valsExpenses.get(k);
+                    if (expense.getXIndex() != i) {
+                        Entry newExpense = new Entry(0f, i);
+                        newValsExpenses.add(newExpense);
+                    } else {
+                        newValsExpenses.add(expense);
+                        k++;
+                    }
+                } else {
+                    Entry newExpense = new Entry(0f, i);
+                    newValsExpenses.add(newExpense);
+                }
+            }
+
+            LineDataSet setIncome = new LineDataSet(newValsIncome, "Income");
+            setIncome.setColor(getResources().getColor(R.color.income));
+            LineDataSet setExpenses = new LineDataSet(newValsExpenses, "Expenses");
+            setExpenses.setColor(getResources().getColor(R.color.expense));
+            setIncome.setLineWidth(1.0f);
+            setIncome.setDrawCircles(false);
+            setIncome.setDrawFilled(true);
+            setIncome.setFillColor(getResources().getColor(R.color.income));
+            setIncome.setFillAlpha(20);
+            setExpenses.setLineWidth(1.0f);
+            setExpenses.setDrawCircles(false);
+            setExpenses.setDrawFilled(true);
+            setExpenses.setFillColor(getResources().getColor(R.color.expense));
+            setExpenses.setFillAlpha(20);
+
+            ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
+            dataSets.add(setIncome);
+            dataSets.add(setExpenses);
+
+            LineData data = new LineData(xVals, dataSets);
+            mLineChart.setData(data);
         }
-
-        LineDataSet setIncome = new LineDataSet(valsIncome, "Income");
-        setIncome.setColor(getResources().getColor(R.color.income));
-        LineDataSet setExpenses = new LineDataSet(valsExpenses, "Expenses");
-        setExpenses.setColor(getResources().getColor(R.color.expense));
-        setIncome.setLineWidth(1.0f);
-        setIncome.setDrawCircles(false);
-        setIncome.setDrawFilled(true);
-        setIncome.setFillColor(getResources().getColor(R.color.income));
-        setIncome.setFillAlpha(20);
-        setExpenses.setLineWidth(1.0f);
-        setExpenses.setDrawCircles(false);
-        setExpenses.setDrawFilled(true);
-        setExpenses.setFillColor(getResources().getColor(R.color.expense));
-        setExpenses.setFillAlpha(20);
-
-        ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
-        dataSets.add(setIncome);
-        dataSets.add(setExpenses);
-
-        LineData data = new LineData(xVals, dataSets);
-        mLineChart.setData(data);
     }
 
     private void setupPieChart() {
@@ -124,7 +167,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             ArrayList<Integer> colors = new ArrayList<Integer>();
             cursor.moveToPosition(-1);
             while (cursor.moveToNext()) {
-                Log.d(TAG, cursor.getDouble(PieChartQuery.TOTAL_AMOUNT)+"");
                 xVals.add(cursor.getString(PieChartQuery.CATEGORY_NAME));
                 yVals.add(new Entry(cursor.getFloat(PieChartQuery.TOTAL_AMOUNT), cursor.getPosition()));
                 colors.add(getResources().getColor(Category.getColor(cursor.getString(PieChartQuery.CATEGORY_ID))));
@@ -152,11 +194,11 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
                 builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
                         FinanceContract.Transactions.buildInTimeIntervalArgs(startDate, endDate));
                 return new CursorLoader(getActivity(),
-                        FinanceContract.Transactions.CONTENT_URI,
+                        FinanceContract.Transactions.buildTransactionsByDaysUri(),
                         LineChartQuery.PROJECTION,
                         builder.getSelection(),
                         builder.getSelectionArgs(),
-                        FinanceContract.Transactions.DEFAULT_SORT);
+                        FinanceContract.Transactions.TRANSACTION_DATE + " ASC");
             case PieChartQuery._TOKEN:
                 builder.where(FinanceContract.Transactions.TRANSACTION_TYPE + "=?",
                         FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE);
@@ -193,28 +235,15 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         int _TOKEN = 0x1;
 
         String[] PROJECTION = {
-                BaseColumns._ID,
-                FinanceContract.Transactions.TRANSACTION_ID,
-                FinanceContract.Transactions.TRANSACTION_DATE,
-                FinanceContract.Transactions.TRANSACTION_TYPE,
-                FinanceContract.Transactions.TRANSACTION_AMOUNT,
-                FinanceContract.Categories.CATEGORY_NAME,
-                FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Currencies.CURRENCY_SYMBOL,
-                FinanceContract.Currencies.CURRENCY_ID
+                //FinanceContract.Transactions.TRANSACTION_AMOUNT,
+                "SUM(" + FinanceContract.Transactions.TRANSACTION_AMOUNT + ")",
+                "strftime('%d/%m/%Y', " + FinanceContract.Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime')",
+                FinanceContract.Transactions.TRANSACTION_TYPE
         };
 
-        int _ID = 0;
-        int TRANSACTION_ID = 1;
-        int DATE = 2;
-        int TYPE = 3;
-        int AMOUNT = 4;
-        int REPEAT = 5;
-        int REMINDER = 6;
-        int CATEGORY_NAME = 7;
-        int CATEGORY_ID = 8;
-        int CURRENCY_SYMBOL = 9;
-        int CURRENCY_ID = 10;
+        int TOTAL_AMOUNT = 0;
+        int DATE = 1;
+        int TYPE = 2;
     }
 
     private interface PieChartQuery {

@@ -140,6 +140,10 @@ public class FinanceContract {
             return CONTENT_URI.buildUpon().appendPath(PATH_CATEGORIES).build();
         }
 
+        /** Build {@link Uri} for all {@link Transactions} grouped by days. */
+        public static Uri buildTransactionsByDaysUri() {
+            return CONTENT_URI.buildUpon().appendPath("days").build();
+        }
         /**
          * Build {@link Uri} that references any {@link Categories} associated
          * with the requested {@link #TRANSACTION_ID}.
