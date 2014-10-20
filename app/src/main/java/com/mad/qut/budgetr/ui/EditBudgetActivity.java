@@ -120,13 +120,20 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
 
     private void populateStartDates() {
         final List<CharSequence> startingDates = new ArrayList<CharSequence>();
+        Calendar curr = Calendar.getInstance();
+        curr.setTimeInMillis(mBudget.startDate);
+        startingDates.add(DateUtils.getFormattedDate(curr.getTime(), "dd/MM/yyyy"));
         Calendar c = DateUtils.getClearCalendar();
         // get last weeks start and next weeks start#
         c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
         c.add(Calendar.DAY_OF_WEEK, 1);
-        startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        if (!c.equals(curr)) {
+            startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        }
         c.add(Calendar.WEEK_OF_YEAR, 1);
-        startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        if (!c.equals(curr)) {
+            startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
+        }
         ArrayAdapter<CharSequence> spinnerAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_dropdown_item, startingDates);
         mStartDateSpinner.setAdapter(spinnerAdapter);
         mStartDateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -195,7 +202,9 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
     }
 
     public void onDeleteClick(View v) {
-
+        // TODO: Delete
+        getContentResolver().delete(updateUri, null, null);
+        this.finish();
     }
 
     public void setEditAmount() {
