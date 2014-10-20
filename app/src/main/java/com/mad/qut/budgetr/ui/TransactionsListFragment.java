@@ -178,7 +178,6 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            Log.d(TAG, cursor.getLong(TransactionQuery.DATE)+"");
 
             ImageView mCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
             TextView mCategoryName = (TextView) view.findViewById(R.id.category_name);

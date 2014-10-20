@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Budgetr.iml" filepath="$PROJECT_DIR$/Budgetr.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/gson-2.3/gson-2.3.iml" filepath="$PROJECT_DIR$/gson-2.3/gson-2.3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mpandroidchartlibrary-1-7-1/mpandroidchartlibrary-1-7-1.iml" filepath="$PROJECT_DIR$/mpandroidchartlibrary-1-7-1/mpandroidchartlibrary-1-7-1.iml" />
       <module fileurl="file://$PROJECT_DIR$/volley/volley.iml" filepath="$PROJECT_DIR$/volley/volley.iml" />
     </modules>
   </component>

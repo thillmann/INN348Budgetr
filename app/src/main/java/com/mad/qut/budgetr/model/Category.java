@@ -27,6 +27,7 @@ public class Category {
     }
 
     private static HashMap<String, Integer> icons = new HashMap<String, Integer>();
+    private static HashMap<String, Integer> colors = new HashMap<String, Integer>();
 
     private static void initIcons() {
         icons.put("ex_rent", R.drawable.icon_rent);
@@ -43,11 +44,33 @@ public class Category {
         icons.put("in_other", R.drawable.icon_other);
     }
 
+    private static void initColors() {
+        colors.put("ex_rent", R.color.category_rent);
+        colors.put("ex_car", R.color.category_car);
+        colors.put("ex_travel", R.color.category_travel);
+        colors.put("ex_groceries", R.color.category_groceries);
+        colors.put("ex_shopping", R.color.category_shopping);
+        colors.put("ex_personal", R.color.category_personal);
+        colors.put("ex_bills", R.color.category_bills);
+        colors.put("ex_entertainment", R.color.category_entertainment);
+        colors.put("ex_other", R.color.category_other);
+        colors.put("in_salary", R.color.category_salary);
+        colors.put("in_business", R.color.category_business);
+        colors.put("in_other", R.color.category_other);
+    }
+
     public static int getIcon(String categoryId) {
         if (icons.isEmpty()) {
             initIcons();
         }
         return icons.get(categoryId);
+    }
+
+    public static int getColor(String categoryId) {
+        if (colors.isEmpty()) {
+            initColors();
+        }
+        return colors.get(categoryId);
     }
 
 }

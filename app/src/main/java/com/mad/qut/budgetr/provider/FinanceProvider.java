@@ -1,6 +1,5 @@
 package com.mad.qut.budgetr.provider;
 
-import android.app.ActionBar;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -11,7 +10,6 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract.*;
 import com.mad.qut.budgetr.provider.FinanceDatabase.*;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
@@ -26,6 +24,7 @@ public class FinanceProvider extends ContentProvider {
 
     private static final int TRANSACTIONS = 100;
     private static final int TRANSACTIONS_ID = 101;
+    private static final int TRANSACTIONS_BY_CATEGORIES = 102;
 
     private static final int BUDGETS = 200;
     private static final int BUDGETS_ID = 201;
@@ -49,6 +48,7 @@ public class FinanceProvider extends ContentProvider {
         final String authority = FinanceContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, "transactions", TRANSACTIONS);
+        matcher.addURI(authority, "transactions/categories", TRANSACTIONS_BY_CATEGORIES);
         matcher.addURI(authority, "transactions/*", TRANSACTIONS_ID);
 
         matcher.addURI(authority, "budgets", BUDGETS);
@@ -261,7 +261,14 @@ public class FinanceProvider extends ContentProvider {
                         .mapToTable(Transactions._ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
-                        .where(Transactions._ID + "=?", transactionId);
+                        .where(Tables.TRANSACTIONS + "." + Transactions._ID + "=?", transactionId);
+            }
+            case TRANSACTIONS_BY_CATEGORIES: {
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                        .mapToTable(Tables.TRANSACTIONS + "." + Transactions._ID, Tables.TRANSACTIONS)
+                        .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
+                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
+                        .groupBy(Tables.TRANSACTIONS + "." + Transactions.CATEGORY_ID);
             }
             case BUDGETS: {
                 return builder.table(Tables.BUDGETS_JOIN_CATEGORIES_CURRENCIES)

@@ -45,4 +45,17 @@
     <color name="income">#259b24</color>
     <color name="expense">#ff4081</color>
 
+    <!-- Categories -->
+    <color name="category_rent">#e6ee9c</color>
+    <color name="category_car">#ce93d8</color>
+    <color name="category_travel">#b39ddb</color>
+    <color name="category_groceries">#81d4fa</color>
+    <color name="category_shopping">#80cbc4</color>
+    <color name="category_personal">#80deea</color>
+    <color name="category_bills">#c5e1a5</color>
+    <color name="category_entertainment">#9fa8da</color>
+    <color name="category_other">#f69988</color>
+    <color name="category_salary">#ffe082</color>
+    <color name="category_business">#f48fb1</color>
+
 </resources>

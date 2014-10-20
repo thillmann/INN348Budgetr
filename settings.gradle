@@ -1,1 +1,1 @@
-include ':app', ':volley', ':gson-2.3'
+include ':app', ':volley', ':gson-2.3', ':mpandroidchartlibrary-1-7-1'

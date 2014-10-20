@@ -135,6 +135,11 @@ public class FinanceContract {
             return CONTENT_URI.buildUpon().appendPath(transactionId).build();
         }
 
+        /** Build {@link Uri} for all {@link Transactions} grouped by {@link Categories}. */
+        public static Uri buildTransactionsByCategoriesUri() {
+            return CONTENT_URI.buildUpon().appendPath(PATH_CATEGORIES).build();
+        }
+
         /**
          * Build {@link Uri} that references any {@link Categories} associated
          * with the requested {@link #TRANSACTION_ID}.
