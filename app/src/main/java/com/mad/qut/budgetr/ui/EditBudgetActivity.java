@@ -11,6 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -99,6 +101,8 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
         switch (i) {
             case FinanceContract.Budgets.BUDGET_TYPE_BIWEEKLY:
                 mStartDateField.setVisibility(View.VISIBLE);
+                Animation slideDownInAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_down_in);
+                mStartDateField.startAnimation(slideDownInAnimation);
                 populateStartDates();
                 break;
             default:
@@ -110,17 +114,19 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
     private void populateStartDates() {
         final List<CharSequence> startingDates = new ArrayList<CharSequence>();
         Calendar curr = Calendar.getInstance();
-        curr.setTimeInMillis(mBudget.startDate);
-        startingDates.add(DateUtils.getFormattedDate(curr.getTime(), "dd/MM/yyyy"));
+        if (mBudget.startDate > 0) {
+            curr.setTimeInMillis(mBudget.startDate);
+            startingDates.add(DateUtils.getFormattedDate(curr.getTime(), "dd/MM/yyyy"));
+        }
         Calendar c = DateUtils.getClearCalendar();
         // get last weeks start and next weeks start#
         c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
         c.add(Calendar.DAY_OF_WEEK, 1);
-        if (!c.equals(curr)) {
+        if (mBudget.startDate < 1 || !c.equals(curr)) {
             startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
         }
         c.add(Calendar.WEEK_OF_YEAR, 1);
-        if (!c.equals(curr)) {
+        if (mBudget.startDate < 1 || !c.equals(curr)) {
             startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
         }
         ArrayAdapter<CharSequence> spinnerAdapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_dropdown_item, startingDates);

@@ -2,15 +2,14 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingBottom="16dp">
+        android:padding="16dp">
 
         <LinearLayout
             style="@style/FloatingLabel"
@@ -31,7 +30,7 @@
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:inputType="text"
+                android:inputType="textCapSentences"
                 android:layout_weight="1" />
 
         </LinearLayout>
@@ -55,6 +54,7 @@
                 android:layout_height="wrap_content"
                 android:cursorVisible="false"
                 android:textIsSelectable="false"
+                android:imeOptions="actionDone"
                 android:inputType="number"
                 android:textSize="45sp"/>
 
@@ -75,7 +75,11 @@
             <Spinner
                 android:id="@+id/type"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/spinner"
+                android:dropDownVerticalOffset="-64dp"
+                android:dropDownWidth="match_parent"
+                android:spinnerMode="dropdown" />
 
         </LinearLayout>
 
@@ -96,7 +100,11 @@
             <Spinner
                 android:id="@+id/start_date"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/spinner"
+                android:dropDownVerticalOffset="-64dp"
+                android:dropDownWidth="match_parent"
+                android:spinnerMode="dropdown" />
 
         </LinearLayout>
 
@@ -109,8 +117,7 @@
             android:horizontalSpacing="8dp"
             android:stretchMode="columnWidth"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
+            android:layout_height="wrap_content" />
 
         <Button
             android:id="@+id/delete"

@@ -2,13 +2,12 @@ package com.mad.qut.budgetr.ui.widget;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CursorAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -58,6 +57,10 @@ public class CategoryGridAdapter extends CursorAdapter {
         }
 
         view.setContentDescription(id);
+
+        Animation scaleInAnimation = AnimationUtils.loadAnimation(context, R.anim.scale_in);
+        scaleInAnimation.setStartOffset(cursor.getPosition() * 20 + 10);
+        view.startAnimation(scaleInAnimation);
     }
 
     public void setCategoty(String categoty) {

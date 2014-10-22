@@ -192,7 +192,14 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
 
             mCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
 
-            mAmount.setText(NumberUtils.getFormattedCurrency(-cursor.getDouble(TransactionQuery.AMOUNT)));
+            double amount = cursor.getDouble(TransactionQuery.AMOUNT);
+            if (cursor.getString(TransactionQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
+                mAmount.setTextColor(getResources().getColor(R.color.income));
+            } else {
+                mAmount.setTextColor(getResources().getColor(R.color.expense));
+                amount = -amount;
+            }
+            mAmount.setText(NumberUtils.getFormattedCurrency(amount));
 
             mDate.setText(DateUtils.getFormattedDate(cursor.getLong(TransactionQuery.DATE), "dd/MM/yyyy"));
         }

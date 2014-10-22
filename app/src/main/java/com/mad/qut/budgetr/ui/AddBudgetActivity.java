@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -99,6 +101,8 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
         switch (i) {
             case FinanceContract.Budgets.BUDGET_TYPE_BIWEEKLY:
                 mStartDateField.setVisibility(View.VISIBLE);
+                Animation slideDownInAnimation = AnimationUtils.loadAnimation(this, R.anim.slide_down_in);
+                mStartDateField.startAnimation(slideDownInAnimation);
                 populateStartDates();
                 break;
             default:

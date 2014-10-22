@@ -5,9 +5,8 @@ import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,6 @@ import com.mad.qut.budgetr.utils.DateUtils;
 import com.mad.qut.budgetr.utils.NumberUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -41,6 +39,8 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
     private TextView tvBalance;
     private TextView tvBalanceValue;
     private LineChart mBalanceChart;
+    private TextView tvIncome;
+    private TextView tvIncomeValue;
     private TextView tvExpenses;
     private TextView tvExpensesValue;
     private PieChart mExpenseChart;
@@ -62,13 +62,15 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         tvTitle = (TextView) view.findViewById(R.id.title);
         tvTitle.setText(DateUtils.getFormattedDateRange(startDate, endDate, "dd MMM", "-"));
 
-        mBalanceChart = (LineChart) view.findViewById(R.id.line_chart);
-        setupBalanceChart();
-
         tvBalance = (TextView) view.findViewById(R.id.balance);
         tvBalanceValue = (TextView) view.findViewById(R.id.balance_value);
+        tvIncome = (TextView) view.findViewById(R.id.income);
+        tvIncomeValue = (TextView) view.findViewById(R.id.income_value);
         tvExpenses = (TextView) view.findViewById(R.id.expenses);
         tvExpensesValue = (TextView) view.findViewById(R.id.expenses_value);
+
+        mBalanceChart = (LineChart) view.findViewById(R.id.line_chart);
+        setupBalanceChart();
 
         mExpenseChart = (PieChart) view.findViewById(R.id.pie_chart);
         setupExpenseChart();
@@ -87,12 +89,9 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         mBalanceChart.setStartAtZero(false);
         mBalanceChart.setDrawLegend(false);
         mBalanceChart.setDrawVerticalGrid(false);
-        final LineChartMarkerView mv = new LineChartMarkerView(getActivity());
-        mv.setOffsets(-mv.getMeasuredWidth()/2, -mv.getMeasuredHeight());
+        LineChartMarkerView mv = new LineChartMarkerView(getActivity());
         mBalanceChart.setMarkerView(mv);
         mBalanceChart.setLongClickable(false);
-
-
 
         getLoaderManager().initLoader(BalanceChartQuery._TOKEN, null, this);
     }
@@ -125,6 +124,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
             ArrayList<Entry> valsBalance = new ArrayList<Entry>();
             float totalValue = 0;
+            float totalIncome = 0;
             int j = 0;
             int k = 0;
             for (int i = 0; i < xVals.size(); i++) {
@@ -145,6 +145,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
                     }
                 }
                 valsBalance.add(new Entry((float) (incomeVal - expenseVal), i));
+                totalIncome += incomeVal;
                 totalValue += incomeVal - expenseVal;
             }
 
@@ -175,17 +176,35 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             } else {
                 tvBalanceValue.setTextColor(getResources().getColor(R.color.body_text_1));
             }
+
+            tvIncome.setText(getResources().getQuantityString(R.plurals.number_transactions, valsIncome.size(), valsIncome.size()));
+            tvIncome.setVisibility(View.VISIBLE);
+
+            tvIncomeValue.setText(NumberUtils.getFormattedCurrency(totalIncome));
         }
     }
 
     private void setupExpenseChart() {
         mExpenseChart.setDescription("");
+        mExpenseChart.setDrawCenterText(true);
         mExpenseChart.setDrawYValues(true);
         mExpenseChart.setDrawXValues(false);
         mExpenseChart.setUsePercentValues(true);
         mExpenseChart.setValueTextSize(14f);
         mExpenseChart.setValueTextColor(getResources().getColor(R.color.body_text_1));
         mExpenseChart.setDrawLegend(false);
+        mExpenseChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry entry, int i) {
+                PieData data = mExpenseChart.getDataOriginal();
+                mExpenseChart.setCenterText(data.getXVals().get(entry.getXIndex()));
+                mExpenseChart.setCenterTextSize(14f);
+            }
+
+            @Override
+            public void onNothingSelected() {
+            }
+        });
 
         getLoaderManager().initLoader(ExpenseChartQuery._TOKEN, null, this);
     }
