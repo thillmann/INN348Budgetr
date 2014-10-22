@@ -50,12 +50,18 @@ public class CategoryGridAdapter extends CursorAdapter {
         backgroundView.setImageResource(Category.getIcon(id, 100));
         nameView.setText(name);
 
+        ImageView hover = (ImageView) view.findViewById(R.id.hover);
         if (!mCategory.equals("") && mCategory.equals(id)) {
-            ImageView hover = (ImageView) view.findViewById(R.id.hover);
             hover.setVisibility(View.VISIBLE);
+        } else {
+            hover.setVisibility(View.INVISIBLE);
         }
 
         view.setContentDescription(id);
+    }
+
+    public void setCategoty(String categoty) {
+        mCategory = categoty;
     }
 
 }

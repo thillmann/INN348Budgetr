@@ -93,7 +93,11 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        setType(menu);
+        if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
+            menu.findItem(R.id.action_type).setTitle(getResources().getString(R.string.income));
+        } else {
+            menu.findItem(R.id.action_type).setTitle(getResources().getString(R.string.expense));
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -129,40 +133,25 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
             return true;
         }
         if (id == R.id.action_type) {
-            toggleType(item);
+            mCategoriesGrid.setSelection("");
+            mGridAdapter.setCategoty("");
+            if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE)) {
+                mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_INCOME;
+                item.setTitle(getResources().getString(R.string.income));
+            } else {
+                mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
+                item.setTitle(getResources().getString(R.string.expense));
+            }
+            getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void setType(MenuItem item) {
-        if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
-            item.setTitle(getResources().getString(R.string.income));
-        } else {
-            item.setTitle(getResources().getString(R.string.expense));
-        }
-    }
-
-    private void setType(Menu menu) {
-        if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
-            menu.findItem(R.id.action_type).setTitle(getResources().getString(R.string.income));
-        } else {
-            menu.findItem(R.id.action_type).setTitle(getResources().getString(R.string.expense));
-        }
-    }
-
-    private void toggleType(MenuItem item) {
-        mTransaction.category = "";
-        if (mTransaction.type.equals(FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE)) {
-            mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_INCOME;
-        } else {
-            mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
-        }
-        setType(item);
-        getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
-    }
-
     public void openDatePicker(View v) {
         DialogFragment datePicker = new DatePickerFragment();
+        Bundle args = new Bundle();
+        args.putLong("timestamp", mTransaction.date);
+        datePicker.setArguments(args);
         datePicker.show(getFragmentManager(), "datePicker");
     }
 
@@ -177,7 +166,11 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Calendar c = DateUtils.getClearCalendar();
+            Bundle args = getArguments();
+            Calendar c = Calendar.getInstance();
+            if (args != null) {
+                c.setTimeInMillis(args.getLong("timestamp"));
+            }
             int year = c.get(Calendar.YEAR);
             int month = c.get(Calendar.MONTH);
             int day = c.get(Calendar.DAY_OF_MONTH);

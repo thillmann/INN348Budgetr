@@ -193,8 +193,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             b.category = cursor.getString(BudgetQuery.CATEGORY_ID);
             b.currency = cursor.getString(BudgetQuery.CURRENCY_ID);
 
-            Log.d(TAG, b.toJSON().toString());
-
             ImageView mCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
             TextView mName = (TextView) view.findViewById(R.id.name);
             TextView mTimeSpan = (TextView) view.findViewById(R.id.time_span);
