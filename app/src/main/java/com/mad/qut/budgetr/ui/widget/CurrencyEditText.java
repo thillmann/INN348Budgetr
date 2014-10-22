@@ -6,6 +6,8 @@ import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.widget.EditText;
 
+import com.mad.qut.budgetr.utils.NumberUtils;
+
 import java.text.NumberFormat;
 
 public class CurrencyEditText extends EditText implements TextWatcher {
@@ -29,7 +31,7 @@ public class CurrencyEditText extends EditText implements TextWatcher {
     }
 
     private void init() {
-        String formatted = NumberFormat.getCurrencyInstance().format(0);
+        String formatted = NumberUtils.getFormattedCurrency(0);
         setText(formatted);
         setSelection(formatted.length());
         addTextChangedListener(this);
@@ -59,12 +61,10 @@ public class CurrencyEditText extends EditText implements TextWatcher {
     public void afterTextChanged(Editable editable) {
         if (!editable.toString().equals(current)) {
             removeTextChangedListener(this);
-            String cleanString = editable.toString().replaceAll("[$.,]", "");
-            value = Double.parseDouble(cleanString) / 100;
-            String formatted = NumberFormat.getCurrencyInstance().format(value);
-            current = formatted;
-            setText(formatted);
-            setSelection(formatted.length());
+            value = NumberUtils.getCleanedValue(editable.toString());
+            current = NumberUtils.getFormattedCurrency(value);
+            setText(current);
+            setSelection(current.length());
             addTextChangedListener(this);
         }
     }

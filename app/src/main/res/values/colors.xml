@@ -44,6 +44,7 @@
 
     <color name="income">#259b24</color>
     <color name="expense">#ff4081</color>
+    <color name="balance">#03a9f4</color>
 
     <!-- Categories -->
     <color name="category_rent">#e6ee9c</color>

@@ -5,13 +5,14 @@ import android.app.LoaderManager;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
-import com.github.mikephil.charting.charts.BarLineChartBase;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
@@ -19,12 +20,16 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.interfaces.OnChartValueSelectedListener;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Category;
 import com.mad.qut.budgetr.provider.FinanceContract;
+import com.mad.qut.budgetr.ui.widget.LineChartMarkerView;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.mad.qut.budgetr.utils.NumberUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -32,44 +37,75 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
     private static final String TAG = OverviewFragment.class.getSimpleName();
 
-    private LineChart mLineChart;
-    private PieChart mPieChart;
+    private TextView tvTitle;
+    private TextView tvBalance;
+    private TextView tvBalanceValue;
+    private LineChart mBalanceChart;
+    private TextView tvExpenses;
+    private TextView tvExpensesValue;
+    private PieChart mExpenseChart;
+
+    private long startDate;
+    private long endDate;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View view = inflater.inflate(R.layout.fragment_overview, container, false);
 
-        mLineChart = (LineChart) view.findViewById(R.id.line_chart);
-        setupLineChart();
+        // TimeSpan
+        Calendar c = DateUtils.getClearCalendar();
+        c.set(Calendar.DAY_OF_MONTH, 1);
+        startDate = c.getTimeInMillis();
+        c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+        endDate = c.getTimeInMillis();
 
-        mPieChart = (PieChart) view.findViewById(R.id.pie_chart);
-        setupPieChart();
+        tvTitle = (TextView) view.findViewById(R.id.title);
+        tvTitle.setText(DateUtils.getFormattedDateRange(startDate, endDate, "dd MMM", "-"));
+
+        mBalanceChart = (LineChart) view.findViewById(R.id.line_chart);
+        setupBalanceChart();
+
+        tvBalance = (TextView) view.findViewById(R.id.balance);
+        tvBalanceValue = (TextView) view.findViewById(R.id.balance_value);
+        tvExpenses = (TextView) view.findViewById(R.id.expenses);
+        tvExpensesValue = (TextView) view.findViewById(R.id.expenses_value);
+
+        mExpenseChart = (PieChart) view.findViewById(R.id.pie_chart);
+        setupExpenseChart();
 
         return view;
     }
 
-    private void setupLineChart() {
-        mLineChart.setDescription("");
-        mLineChart.setDrawYValues(false);
-        mLineChart.setHighlightEnabled(true);
-        mLineChart.setDrawBorder(true);
-        mLineChart.setBorderPositions(new BarLineChartBase.BorderPosition[]{
-                BarLineChartBase.BorderPosition.BOTTOM
-        });
-        mLineChart.setUnit(" A$");
-        mLineChart.setDrawUnitsInChart(true);
-        mLineChart.setLongClickable(false);
+    private void setupBalanceChart() {
+        mBalanceChart.setDescription("");
+        mBalanceChart.setDrawYValues(false);
+        mBalanceChart.setHighlightEnabled(true);
+        mBalanceChart.setHighlightIndicatorEnabled(false);
+        mBalanceChart.setDrawBorder(false);
+        mBalanceChart.setUnit(" " + NumberUtils.getCurrencySymbol());
+        mBalanceChart.setDrawUnitsInChart(true);
+        mBalanceChart.setStartAtZero(false);
+        mBalanceChart.setDrawLegend(false);
+        mBalanceChart.setDrawVerticalGrid(false);
+        final LineChartMarkerView mv = new LineChartMarkerView(getActivity());
+        mv.setOffsets(-mv.getMeasuredWidth()/2, -mv.getMeasuredHeight());
+        mBalanceChart.setMarkerView(mv);
+        mBalanceChart.setLongClickable(false);
 
-        getLoaderManager().initLoader(LineChartQuery._TOKEN, null, this);
+
+
+        getLoaderManager().initLoader(BalanceChartQuery._TOKEN, null, this);
     }
 
-    private void setupLineChartData(Cursor cursor) {
+    private void setupBalanceChartData(Cursor cursor) {
         if (cursor.getCount() > 0) {
+            int count = 0;
+
             ArrayList<String> xVals = new ArrayList<String>();
             Calendar c = Calendar.getInstance();
             for (int i = 0; i < c.getActualMaximum(Calendar.DAY_OF_MONTH); i++) {
                 c.set(Calendar.DAY_OF_MONTH, i+1);
-                xVals.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy")); //+ "/" + c.get(Calendar.MONTH)  + "/" + c.get(Calendar.YEAR)
+                xVals.add(DateUtils.getFormattedDate(c.getTime(), "dd MMM"));
             }
 
             ArrayList<Entry> valsIncome = new ArrayList<Entry>();
@@ -77,136 +113,134 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
             cursor.moveToPosition(-1);
             while (cursor.moveToNext()) {
-                String date = cursor.getString(LineChartQuery.DATE);
-                Entry entry = new Entry(cursor.getFloat(LineChartQuery.TOTAL_AMOUNT), xVals.indexOf(date));
-                if (cursor.getString(LineChartQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
+                String day = cursor.getString(BalanceChartQuery.DAY);
+                Entry entry = new Entry(cursor.getFloat(BalanceChartQuery.TOTAL_AMOUNT), Integer.parseInt(day)-1);
+                if (cursor.getString(BalanceChartQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
                     valsIncome.add(entry);
                 } else {
                     valsExpenses.add(entry);
                 }
-                Log.d(TAG, "Day: " + date);
-                Log.d(TAG, "Amount: " + cursor.getFloat(LineChartQuery.TOTAL_AMOUNT));
-                Log.d(TAG, "Type: " + cursor.getString(LineChartQuery.TYPE));
+                count += cursor.getInt(BalanceChartQuery.COUNT);
             }
 
-            ArrayList<Entry> newValsIncome = new ArrayList<Entry>();
-            ArrayList<Entry> newValsExpenses = new ArrayList<Entry>();
-
-            // add missing
+            ArrayList<Entry> valsBalance = new ArrayList<Entry>();
+            float totalValue = 0;
             int j = 0;
             int k = 0;
             for (int i = 0; i < xVals.size(); i++) {
+                double incomeVal = 0;
+                double expenseVal = 0;
                 if (j < valsIncome.size()) {
                     Entry income = valsIncome.get(j);
-                    if (income.getXIndex() != i) {
-                        Entry newIncome = new Entry(0f, i);
-                        newValsIncome.add(newIncome);
-                    } else {
-                        newValsIncome.add(income);
+                    if (income.getXIndex() == i) {
+                        incomeVal = income.getVal();
                         j++;
                     }
-                } else {
-                    Entry newIncome = new Entry(0f, i);
-                    newValsIncome.add(newIncome);
                 }
                 if (k < valsExpenses.size()) {
                     Entry expense = valsExpenses.get(k);
-                    if (expense.getXIndex() != i) {
-                        Entry newExpense = new Entry(0f, i);
-                        newValsExpenses.add(newExpense);
-                    } else {
-                        newValsExpenses.add(expense);
+                    if (expense.getXIndex() == i) {
+                        expenseVal = expense.getVal();
                         k++;
                     }
-                } else {
-                    Entry newExpense = new Entry(0f, i);
-                    newValsExpenses.add(newExpense);
                 }
+                valsBalance.add(new Entry((float) (incomeVal - expenseVal), i));
+                totalValue += incomeVal - expenseVal;
             }
 
-            LineDataSet setIncome = new LineDataSet(newValsIncome, "Income");
-            setIncome.setColor(getResources().getColor(R.color.income));
-            LineDataSet setExpenses = new LineDataSet(newValsExpenses, "Expenses");
-            setExpenses.setColor(getResources().getColor(R.color.expense));
-            setIncome.setLineWidth(1.0f);
-            setIncome.setDrawCircles(false);
-            setIncome.setDrawFilled(true);
-            setIncome.setFillColor(getResources().getColor(R.color.income));
-            setIncome.setFillAlpha(20);
-            setExpenses.setLineWidth(1.0f);
-            setExpenses.setDrawCircles(false);
-            setExpenses.setDrawFilled(true);
-            setExpenses.setFillColor(getResources().getColor(R.color.expense));
-            setExpenses.setFillAlpha(20);
+            LineDataSet setBalance = new LineDataSet(valsBalance, "Balance");
+            setBalance.setColor(getResources().getColor(R.color.balance));
+            setBalance.setLineWidth(1.0f);
+            setBalance.setDrawCircles(false);
+            setBalance.setDrawFilled(true);
+            setBalance.setFillColor(getResources().getColor(R.color.balance));
+            setBalance.setFillAlpha(20);
+            float max = Math.max(Math.abs(setBalance.getYMax()), Math.abs(setBalance.getYMin()))*2;
+            mBalanceChart.setYRange(-max, max, false);
 
             ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
-            dataSets.add(setIncome);
-            dataSets.add(setExpenses);
+            dataSets.add(setBalance);
 
             LineData data = new LineData(xVals, dataSets);
-            mLineChart.setData(data);
+            mBalanceChart.setData(data);
+
+            tvBalance.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
+            tvBalance.setVisibility(View.VISIBLE);
+
+            tvBalanceValue.setText(NumberUtils.getFormattedCurrency(totalValue));
+            if (totalValue > 0) {
+                tvBalanceValue.setTextColor(getResources().getColor(R.color.income));
+            } else if (totalValue < 0) {
+                tvBalanceValue.setTextColor(getResources().getColor(R.color.expense));
+            } else {
+                tvBalanceValue.setTextColor(getResources().getColor(R.color.body_text_1));
+            }
         }
     }
 
-    private void setupPieChart() {
-        mPieChart.setDescription("");
-        mPieChart.setDrawYValues(true);
-        mPieChart.setDrawXValues(false);
-        mPieChart.setUsePercentValues(true);
-        mPieChart.setValueTextSize(14f);
-        mPieChart.setValueTextColor(getResources().getColor(R.color.body_text_1));
-        mPieChart.setDrawLegend(false);
+    private void setupExpenseChart() {
+        mExpenseChart.setDescription("");
+        mExpenseChart.setDrawYValues(true);
+        mExpenseChart.setDrawXValues(false);
+        mExpenseChart.setUsePercentValues(true);
+        mExpenseChart.setValueTextSize(14f);
+        mExpenseChart.setValueTextColor(getResources().getColor(R.color.body_text_1));
+        mExpenseChart.setDrawLegend(false);
 
-        getLoaderManager().initLoader(PieChartQuery._TOKEN, null, this);
+        getLoaderManager().initLoader(ExpenseChartQuery._TOKEN, null, this);
     }
 
-    private void setupPieChartData(Cursor cursor) {
+    private void setupExpenseChartData(Cursor cursor) {
         if (cursor.getCount() > 0) {
+            int count = 0;
+            float totalValue = 0;
+
             ArrayList<String> xVals = new ArrayList<String>();
             ArrayList<Entry> yVals = new ArrayList<Entry>();
             ArrayList<Integer> colors = new ArrayList<Integer>();
             cursor.moveToPosition(-1);
             while (cursor.moveToNext()) {
-                xVals.add(cursor.getString(PieChartQuery.CATEGORY_NAME));
-                yVals.add(new Entry(cursor.getFloat(PieChartQuery.TOTAL_AMOUNT), cursor.getPosition()));
-                colors.add(getResources().getColor(Category.getColor(cursor.getString(PieChartQuery.CATEGORY_ID))));
+                xVals.add(cursor.getString(ExpenseChartQuery.CATEGORY_NAME));
+                yVals.add(new Entry(cursor.getFloat(ExpenseChartQuery.TOTAL_AMOUNT), cursor.getPosition()));
+                colors.add(getResources().getColor(Category.getColor(cursor.getString(ExpenseChartQuery.CATEGORY_ID))));
+                count += cursor.getInt(ExpenseChartQuery.COUNT);
+                totalValue -= cursor.getFloat(ExpenseChartQuery.TOTAL_AMOUNT);
             }
             PieDataSet set = new PieDataSet(yVals, "");
             set.setSliceSpace(3f);
             set.setColors(colors);
 
             PieData data = new PieData(xVals, set);
-            mPieChart.setData(data);
+            mExpenseChart.setData(data);
+
+            tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
+            tvExpenses.setVisibility(View.VISIBLE);
+
+            tvExpensesValue.setText(NumberUtils.getFormattedCurrency(totalValue));
         }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        // TimeSpan
-        Calendar c = DateUtils.getClearCalendar();
-        c.set(Calendar.DAY_OF_MONTH, 1);
-        long startDate = c.getTimeInMillis();
-        c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-        long endDate = c.getTimeInMillis();
         SelectionBuilder builder = new SelectionBuilder();
         switch (i) {
-            case LineChartQuery._TOKEN:
+            case BalanceChartQuery._TOKEN:
                 builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
                         FinanceContract.Transactions.buildInTimeIntervalArgs(startDate, endDate));
                 return new CursorLoader(getActivity(),
                         FinanceContract.Transactions.buildTransactionsByDaysUri(),
-                        LineChartQuery.PROJECTION,
+                        BalanceChartQuery.PROJECTION,
                         builder.getSelection(),
                         builder.getSelectionArgs(),
                         FinanceContract.Transactions.TRANSACTION_DATE + " ASC");
-            case PieChartQuery._TOKEN:
+            case ExpenseChartQuery._TOKEN:
                 builder.where(FinanceContract.Transactions.TRANSACTION_TYPE + "=?",
                         FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE);
                 builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
                         FinanceContract.Transactions.buildInTimeIntervalArgs(startDate, endDate));
                 return new CursorLoader(getActivity(),
                         FinanceContract.Transactions.buildTransactionsByCategoriesUri(),
-                        PieChartQuery.PROJECTION,
+                        ExpenseChartQuery.PROJECTION,
                         builder.getSelection(),
                         builder.getSelectionArgs(),
                         FinanceContract.Transactions.DEFAULT_SORT);
@@ -217,11 +251,11 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         switch (cursorLoader.getId()) {
-            case LineChartQuery._TOKEN:
-                setupLineChartData(cursor);
+            case BalanceChartQuery._TOKEN:
+                setupBalanceChartData(cursor);
                 break;
-            case PieChartQuery._TOKEN:
-                setupPieChartData(cursor);
+            case ExpenseChartQuery._TOKEN:
+                setupExpenseChartData(cursor);
                 break;
         }
     }
@@ -231,22 +265,23 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
     }
 
-    private interface LineChartQuery {
+    private interface BalanceChartQuery {
         int _TOKEN = 0x1;
 
         String[] PROJECTION = {
-                //FinanceContract.Transactions.TRANSACTION_AMOUNT,
                 "SUM(" + FinanceContract.Transactions.TRANSACTION_AMOUNT + ")",
-                "strftime('%d/%m/%Y', " + FinanceContract.Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime')",
-                FinanceContract.Transactions.TRANSACTION_TYPE
+                "strftime('%d', " + FinanceContract.Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime')",
+                FinanceContract.Transactions.TRANSACTION_TYPE,
+                "COUNT(*)"
         };
 
         int TOTAL_AMOUNT = 0;
-        int DATE = 1;
+        int DAY = 1;
         int TYPE = 2;
+        int COUNT = 3;
     }
 
-    private interface PieChartQuery {
+    private interface ExpenseChartQuery {
         int _TOKEN = 0x2;
 
         String[] PROJECTION = {
@@ -254,13 +289,15 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
                 FinanceContract.Categories.CATEGORY_NAME,
                 FinanceContract.Categories.CATEGORY_ID,
                 FinanceContract.Currencies.CURRENCY_SYMBOL,
-                FinanceContract.Currencies.CURRENCY_ID
+                FinanceContract.Currencies.CURRENCY_ID,
+                "COUNT(*)"
         };
 
         int TOTAL_AMOUNT = 0;
         int CATEGORY_NAME = 1;
         int CATEGORY_ID = 2;
         int CURRENCY_ID = 4;
+        int COUNT = 5;
     }
 
 }

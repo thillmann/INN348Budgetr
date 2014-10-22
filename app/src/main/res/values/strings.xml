@@ -123,7 +123,13 @@
     <string name="label_start_date">Periods begins</string>
     <string name="label_target">Budget target</string>
     <string name="expenses_by_category">Expenses by Category</string>
-    <string name="income_vs_expenses"><![CDATA[Income & Expenses]]></string>
+    <string name="overview">Overview</string>
     <string name="no_name">Please enter a name</string>
+    <string name="expenses">Expenses</string>
+
+    <plurals name="number_transactions">
+        <item quantity="one">1 transaction</item>
+        <item quantity="other">%d transactions</item>
+    </plurals>
 
 </resources>

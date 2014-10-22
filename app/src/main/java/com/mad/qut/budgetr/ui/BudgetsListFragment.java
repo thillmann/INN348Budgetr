@@ -32,6 +32,7 @@ import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.utils.CircleImage;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.mad.qut.budgetr.utils.SelectionBuilder;
 import com.melnykov.fab.FloatingActionButton;
 
 import java.text.NumberFormat;
@@ -224,10 +225,15 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
             @Override
             protected Double doInBackground(Object... args0) {
+                SelectionBuilder builder = new SelectionBuilder();
+                if (mBudget.type != FinanceContract.Budgets.BUDGET_TYPE_ENDLESS) {
+                    builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
+                            FinanceContract.Transactions.buildInTimeIntervalArgs(mBudget.getCurrentStartDate(), mBudget.getCurrentEndDate()));
+                }
                 Cursor c = getActivity().getContentResolver().query(FinanceContract.Budgets.buildBudgetTransactionsUri(mId),
                         TransactionQuery.PROJECTION,
-                        FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
-                        FinanceContract.Transactions.buildInTimeIntervalArgs(mBudget.getCurrentStartDate(), mBudget.getCurrentEndDate()),
+                        builder.getSelection(),
+                        builder.getSelectionArgs(),
                         null);
                 if (c != null) {
                     c.moveToFirst();

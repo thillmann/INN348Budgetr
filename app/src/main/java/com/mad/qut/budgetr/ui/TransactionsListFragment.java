@@ -31,6 +31,7 @@ import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.provider.FinanceProvider;
 import com.mad.qut.budgetr.utils.CircleImage;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.mad.qut.budgetr.utils.NumberUtils;
 import com.melnykov.fab.FloatingActionButton;
 
 import java.text.NumberFormat;
@@ -191,15 +192,7 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
 
             mCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
 
-            int color = getResources().getColor(R.color.expense);
-            String prefix = "-";
-            if (cursor.getString(TransactionQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
-                color = getResources().getColor(R.color.income);
-                prefix = "+";
-            }
-            String formattedAmount = NumberFormat.getCurrencyInstance().format(cursor.getDouble(TransactionQuery.AMOUNT));
-            mAmount.setText(prefix + formattedAmount.replace("$", cursor.getString(TransactionQuery.CURRENCY_SYMBOL)));
-            mAmount.setTextColor(color);
+            mAmount.setText(NumberUtils.getFormattedCurrency(-cursor.getDouble(TransactionQuery.AMOUNT)));
 
             mDate.setText(DateUtils.getFormattedDate(cursor.getLong(TransactionQuery.DATE), "dd/MM/yyyy"));
         }
