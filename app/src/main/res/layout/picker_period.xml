@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/week"
+            android:text="Week"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            style="@style/ButtonStyle" />
+
+        <Button
+            android:id="@+id/month"
+            android:text="Month"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            style="@style/ButtonStyle"
+            android:textColor="@color/theme_accent_1" />
+
+        <Button
+            android:id="@+id/year"
+            android:text="Year"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            style="@style/ButtonStyle" />
+
+    </LinearLayout>
+
+    <com.wefika.horizontalpicker.HorizontalPicker
+        android:id="@+id/picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/body_text_1"
+        android:textSize="14sp"
+        android:padding="16dp"
+        android:ellipsize="none"
+        android:marqueeRepeatLimit="1"
+        app:values="@array/repeats"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:dividerSize="16dp"
+        app:sideItems="1"/>
+
+</LinearLayout>

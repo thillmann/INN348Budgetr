@@ -1,5 +1,6 @@
 package com.mad.qut.budgetr.ui;
 
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
@@ -10,6 +11,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -24,6 +28,7 @@ import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Category;
 import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.ui.widget.LineChartMarkerView;
+import com.mad.qut.budgetr.ui.widget.PeriodPickerFragment;
 import com.mad.qut.budgetr.utils.DateUtils;
 import com.mad.qut.budgetr.utils.NumberUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
@@ -31,11 +36,15 @@ import com.mad.qut.budgetr.utils.SelectionBuilder;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class OverviewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class OverviewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, PeriodPickerFragment.PeriodPickerListener {
 
     private static final String TAG = OverviewFragment.class.getSimpleName();
 
-    private TextView tvTitle;
+    private static final String STATE_PERIOD = "period";
+    private static final String STATE_START_DATE = "startDate";
+    private static final String STATE_END_DATE = "endDate";
+
+    private Button btPeriod;
     private TextView tvBalance;
     private TextView tvBalanceValue;
     private LineChart mBalanceChart;
@@ -45,22 +54,48 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
     private TextView tvExpensesValue;
     private PieChart mExpenseChart;
 
-    private long startDate;
-    private long endDate;
+    private int mPeriod;
+    private long mStartDate;
+    private long mEndDate;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mPeriod = savedInstanceState.getInt(STATE_PERIOD);
+            mStartDate = savedInstanceState.getLong(STATE_START_DATE);
+            mEndDate = savedInstanceState.getLong(STATE_END_DATE);
+        } else {
+            // TimeSpan
+            Calendar c = DateUtils.getClearCalendar();
+            c.set(Calendar.DAY_OF_MONTH, 1);
+            mStartDate = c.getTimeInMillis();
+            c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+            mEndDate = c.getTimeInMillis();
+
+            mPeriod = PeriodPickerFragment.PERIOD_MONTH;
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        Log.d(TAG, "SAVE");
+        savedInstanceState.putInt(STATE_PERIOD, mPeriod);
+        savedInstanceState.putLong(STATE_START_DATE, mStartDate);
+        savedInstanceState.putLong(STATE_END_DATE, mEndDate);
+
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View view = inflater.inflate(R.layout.fragment_overview, container, false);
 
-        // TimeSpan
-        Calendar c = DateUtils.getClearCalendar();
-        c.set(Calendar.DAY_OF_MONTH, 1);
-        startDate = c.getTimeInMillis();
-        c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-        endDate = c.getTimeInMillis();
-
-        tvTitle = (TextView) view.findViewById(R.id.title);
-        tvTitle.setText(DateUtils.getFormattedDateRange(startDate, endDate, "dd MMM", "-"));
+        btPeriod = (Button) view.findViewById(R.id.period);
+        setPeriodButton();
+        btPeriod.setOnClickListener(this);
 
         tvBalance = (TextView) view.findViewById(R.id.balance);
         tvBalanceValue = (TextView) view.findViewById(R.id.balance_value);
@@ -78,6 +113,77 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         return view;
     }
 
+    private void resetCharts() {
+        mBalanceChart.fitScreen();
+        mBalanceChart.setVisibility(View.GONE);
+
+        tvBalance.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
+        tvBalance.setVisibility(View.VISIBLE);
+        tvBalanceValue.setText(NumberUtils.getFormattedCurrency(0));
+        tvBalanceValue.setTextColor(getResources().getColor(R.color.body_text_1));
+
+        tvIncome.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
+        tvIncome.setVisibility(View.VISIBLE);
+        tvIncomeValue.setText(NumberUtils.getFormattedCurrency(0));
+
+        mExpenseChart.setVisibility(View.GONE);
+
+        tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
+        tvExpenses.setVisibility(View.VISIBLE);
+
+        tvExpensesValue.setText(NumberUtils.getFormattedCurrency(0));
+    }
+
+    @Override
+    public void onClick(View view) {
+        DialogFragment periodPicker = new PeriodPickerFragment();
+        periodPicker.setTargetFragment(this, 1);
+        Bundle args = new Bundle();
+        args.putInt(PeriodPickerFragment.CURRENT_PERIOD, mPeriod);
+        args.putLong(PeriodPickerFragment.CURRENT_START_DATE, mStartDate);
+        periodPicker.setArguments(args);
+        periodPicker.show(getFragmentManager(), "periodPicker");
+    }
+
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        Bundle selection = ((PeriodPickerFragment) dialog).getSelection();
+        long newStartDate = selection.getLong(STATE_START_DATE);
+        long newEndDate = selection.getLong(STATE_END_DATE);
+
+        if (mStartDate != newStartDate || mEndDate != newEndDate) {
+            mStartDate = newStartDate;
+            mEndDate = newEndDate;
+            mPeriod = selection.getInt(STATE_PERIOD);
+            setPeriodButton();
+
+            resetCharts();
+
+            getLoaderManager().restartLoader(BalanceChartQuery._TOKEN, null, this);
+            getLoaderManager().restartLoader(ExpenseChartQuery._TOKEN, null, this);
+        }
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        Log.d(TAG, "negative");
+    }
+
+    private void setPeriodButton() {
+        switch (mPeriod) {
+            case PeriodPickerFragment.PERIOD_YEAR:
+                btPeriod.setText(DateUtils.getFormattedDate(mStartDate, "yyyy"));
+                break;
+            case PeriodPickerFragment.PERIOD_MONTH:
+                btPeriod.setText(DateUtils.getFormattedDate(mStartDate, "MMMM yyyy"));
+                break;
+            case PeriodPickerFragment.PERIOD_WEEK:
+                btPeriod.setText(DateUtils.getFormattedDateRange(mStartDate, mEndDate, "dd MMM", "-"));
+                break;
+        }
+    }
+
     private void setupBalanceChart() {
         mBalanceChart.setDescription("");
         mBalanceChart.setDrawYValues(false);
@@ -91,20 +197,21 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         mBalanceChart.setDrawVerticalGrid(false);
         LineChartMarkerView mv = new LineChartMarkerView(getActivity());
         mBalanceChart.setMarkerView(mv);
-        mBalanceChart.setLongClickable(false);
 
         getLoaderManager().initLoader(BalanceChartQuery._TOKEN, null, this);
     }
 
     private void setupBalanceChartData(Cursor cursor) {
         if (cursor.getCount() > 0) {
+            mBalanceChart.setVisibility(View.VISIBLE);
+            Animation scaleInAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.scale_in);
+            mBalanceChart.startAnimation(scaleInAnimation);
+
             int count = 0;
 
             ArrayList<String> xVals = new ArrayList<String>();
-            Calendar c = Calendar.getInstance();
-            for (int i = 0; i < c.getActualMaximum(Calendar.DAY_OF_MONTH); i++) {
-                c.set(Calendar.DAY_OF_MONTH, i+1);
-                xVals.add(DateUtils.getFormattedDate(c.getTime(), "dd MMM"));
+            for (long i = mStartDate; i <= mEndDate; i = i + 1000*60*60*24) {
+                xVals.add(DateUtils.getFormattedDate(i, "dd MMM"));
             }
 
             ArrayList<Entry> valsIncome = new ArrayList<Entry>();
@@ -112,8 +219,8 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
             cursor.moveToPosition(-1);
             while (cursor.moveToNext()) {
-                String day = cursor.getString(BalanceChartQuery.DAY);
-                Entry entry = new Entry(cursor.getFloat(BalanceChartQuery.TOTAL_AMOUNT), Integer.parseInt(day)-1);
+                long date = cursor.getLong(BalanceChartQuery.DATE);
+                Entry entry = new Entry(cursor.getFloat(BalanceChartQuery.TOTAL_AMOUNT), xVals.indexOf(DateUtils.getFormattedDate(date, "dd MMM")));
                 if (cursor.getString(BalanceChartQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
                     valsIncome.add(entry);
                 } else {
@@ -164,6 +271,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
             LineData data = new LineData(xVals, dataSets);
             mBalanceChart.setData(data);
+            mBalanceChart.invalidate();
 
             tvBalance.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
             tvBalance.setVisibility(View.VISIBLE);
@@ -211,6 +319,10 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
     private void setupExpenseChartData(Cursor cursor) {
         if (cursor.getCount() > 0) {
+            mExpenseChart.setVisibility(View.VISIBLE);
+            Animation scaleInAnimation = AnimationUtils.loadAnimation(getActivity(), R.anim.scale_in);
+            mExpenseChart.startAnimation(scaleInAnimation);
+
             int count = 0;
             float totalValue = 0;
 
@@ -231,6 +343,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
             PieData data = new PieData(xVals, set);
             mExpenseChart.setData(data);
+            mExpenseChart.invalidate();
 
             tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
             tvExpenses.setVisibility(View.VISIBLE);
@@ -245,7 +358,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         switch (i) {
             case BalanceChartQuery._TOKEN:
                 builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
-                        FinanceContract.Transactions.buildInTimeIntervalArgs(startDate, endDate));
+                        FinanceContract.Transactions.buildInTimeIntervalArgs(mStartDate, mEndDate));
                 return new CursorLoader(getActivity(),
                         FinanceContract.Transactions.buildTransactionsByDaysUri(),
                         BalanceChartQuery.PROJECTION,
@@ -256,7 +369,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
                 builder.where(FinanceContract.Transactions.TRANSACTION_TYPE + "=?",
                         FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE);
                 builder.where(FinanceContract.Transactions.IN_TIME_INTERVAL_SELECTION,
-                        FinanceContract.Transactions.buildInTimeIntervalArgs(startDate, endDate));
+                        FinanceContract.Transactions.buildInTimeIntervalArgs(mStartDate, mEndDate));
                 return new CursorLoader(getActivity(),
                         FinanceContract.Transactions.buildTransactionsByCategoriesUri(),
                         ExpenseChartQuery.PROJECTION,
@@ -281,7 +394,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
+        resetCharts();
     }
 
     private interface BalanceChartQuery {
@@ -289,13 +402,13 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
         String[] PROJECTION = {
                 "SUM(" + FinanceContract.Transactions.TRANSACTION_AMOUNT + ")",
-                "strftime('%d', " + FinanceContract.Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime')",
+                FinanceContract.Transactions.TRANSACTION_DATE,
                 FinanceContract.Transactions.TRANSACTION_TYPE,
                 "COUNT(*)"
         };
 
         int TOTAL_AMOUNT = 0;
-        int DAY = 1;
+        int DATE = 1;
         int TYPE = 2;
         int COUNT = 3;
     }

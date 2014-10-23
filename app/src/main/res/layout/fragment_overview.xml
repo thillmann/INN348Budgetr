@@ -15,19 +15,13 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/title"
+            <Button
+                android:id="@+id/period"
+                android:textSize="16sp"
+                android:gravity="start|center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginBottom="16dp"
-                style="@style/TitleTextStyle" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/list_divider"
-                android:layout_gravity="bottom" />
+                android:background="@drawable/spinner" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -72,6 +66,7 @@
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.LineChart
+                android:visibility="gone"
                 android:id="@+id/line_chart"
                 android:layout_width="match_parent"
                 android:layout_height="240dp"
@@ -178,6 +173,7 @@
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.PieChart
+                android:visibility="gone"
                 android:id="@+id/pie_chart"
                 android:layout_width="match_parent"
                 android:layout_height="240dp" />

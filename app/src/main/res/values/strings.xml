@@ -126,8 +126,14 @@
     <string name="overview">Overview</string>
     <string name="no_name">Please enter a name</string>
     <string name="expenses">Expenses</string>
+    <string name="cancel">Cancel</string>
+    <string name="set">Set</string>
+    <string name="okay">OK</string>
+    <string name="about_title">About</string>
+    <string name="about_message">Budgetr was created by Timo Hillmann.</string>
 
     <plurals name="number_transactions">
+        <item quantity="zero">no transactions</item>
         <item quantity="one">1 transaction</item>
         <item quantity="other">%d transactions</item>
     </plurals>

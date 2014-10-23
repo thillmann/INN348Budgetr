@@ -3,18 +3,25 @@ package com.mad.qut.budgetr.ui;
 import java.util.Locale;
 
 import android.app.ActionBar;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.mad.qut.budgetr.R;
+import com.mad.qut.budgetr.ui.widget.PeriodPickerFragment;
 
 
 public class MainActivity extends BaseActivity {
@@ -113,6 +120,15 @@ public class MainActivity extends BaseActivity {
             iSettings.setClass(this, SettingsActivity.class);
             startActivity(iSettings);
             return true;
+        }
+        if (id == R.id.action_about) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.about_title);
+            builder.setMessage(R.string.about_message);
+            builder.setPositiveButton(R.string.okay, null);
+            AlertDialog dialog = builder.create();
+
+            dialog.show();
         }
         if (id == R.id.action_receipt_scanner) {
             Intent iReceiptScanner = new Intent();
