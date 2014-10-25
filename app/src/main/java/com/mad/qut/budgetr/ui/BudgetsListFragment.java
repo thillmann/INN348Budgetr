@@ -7,18 +7,14 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.BaseColumns;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -28,16 +24,9 @@ import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Budget;
 import com.mad.qut.budgetr.model.Category;
 import com.mad.qut.budgetr.model.Currency;
-import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
-import com.mad.qut.budgetr.utils.CircleImage;
-import com.mad.qut.budgetr.utils.DateUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
 import com.melnykov.fab.FloatingActionButton;
-
-import java.text.NumberFormat;
-import java.util.HashMap;
-import java.util.List;
 
 public class BudgetsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 

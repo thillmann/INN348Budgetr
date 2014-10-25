@@ -4,9 +4,7 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature
@@ -19,31 +17,36 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.AddTransactionActivity"
             android:label="Add Transaction"
             android:parentActivityName=".ui.MainActivity" />
+
         <activity
             android:name=".ui.EditTransactionActivity"
             android:label="Edit Transaction"
             android:parentActivityName=".ui.MainActivity" />
+
         <activity
             android:name=".ui.ReceiptScannerActivity"
             android:label="Add Transaction"
             android:parentActivityName=".ui.MainActivity" />
+
         <activity
             android:name=".ui.SettingsActivity"
             android:label="@string/title_settings"
             android:parentActivityName=".ui.MainActivity" />
+
         <activity
             android:name=".ui.AddBudgetActivity"
             android:label="@string/title_activity_add_budget"
@@ -52,6 +55,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.mad.qut.budgetr.ui.MainActivity" />
         </activity>
+
         <activity
             android:name=".ui.EditBudgetActivity"
             android:label="@string/title_activity_edit_budget"
@@ -66,6 +70,20 @@
             android:authorities="com.mad.qut.budgetr"
             android:label="@string/app_name"
             android:exported="false" />
+
+        <service
+            android:enabled="true"
+            android:name=".service.ScanReceiptService"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.ScanReceiptReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mad.qut.budgetr.scan" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

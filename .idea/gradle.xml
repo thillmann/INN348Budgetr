@@ -11,7 +11,10 @@
             <option value="$PROJECT_DIR$/HorizontalPicker" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/gson-2.3" />
+            <option value="$PROJECT_DIR$/libraries" />
+            <option value="$PROJECT_DIR$/libraries/tess-two" />
             <option value="$PROJECT_DIR$/mpandroidchartlibrary-1-7-1" />
+            <option value="$PROJECT_DIR$/opencv-android" />
             <option value="$PROJECT_DIR$/volley" />
           </set>
         </option>

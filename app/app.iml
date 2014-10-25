@@ -87,6 +87,8 @@
     <orderEntry type="library" exported="" name="support-v4-20.0.0" level="project" />
     <orderEntry type="library" exported="" name="volley" level="project" />
     <orderEntry type="library" exported="" name="gson-2.3" level="project" />
+    <orderEntry type="module" module-name="tess-two" exported="" />
+    <orderEntry type="module" module-name="opencv-android" exported="" />
     <orderEntry type="module" module-name="HorizontalPicker" exported="" />
   </component>
 </module>

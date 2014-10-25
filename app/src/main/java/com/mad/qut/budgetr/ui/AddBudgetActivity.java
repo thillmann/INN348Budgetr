@@ -71,7 +71,6 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
     }
 
     private void setDefaultValues() {
-        // default values for budget
         mBudget.amount = 0.0;
         mBudget.type = 0;
         mBudget.startDate = -1;
@@ -114,7 +113,6 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
     private void populateStartDates() {
         final List<CharSequence> startingDates = new ArrayList<CharSequence>();
         Calendar c = DateUtils.getClearCalendar();
-        // get last weeks start and next weeks start#
         c.set(Calendar.DAY_OF_WEEK, c.getFirstDayOfWeek());
         c.add(Calendar.DAY_OF_WEEK, 1);
         startingDates.add(DateUtils.getFormattedDate(c.getTime(), "dd/MM/yyyy"));
@@ -137,16 +135,12 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.add_budget, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mNameEdit.getText().toString().equals("")) {
@@ -193,17 +187,13 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        boolean isEmpty = data.getCount() == 0;
-        Log.d(TAG, data.getCount() + "");
-        mGridAdapter.swapCursor(data);
-        //mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mGridAdapter.swapCursor(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mGridAdapter.swapCursor(null);
-        //mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private interface CategoryQuery {

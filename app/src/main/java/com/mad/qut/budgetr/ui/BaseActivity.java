@@ -17,6 +17,10 @@ import com.mad.qut.budgetr.sync.FinanceDataHandler;
 import com.mad.qut.budgetr.ui.widget.PasswordDialogFragment;
 import com.mad.qut.budgetr.utils.PrefUtils;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+
 import java.io.IOException;
 
 public abstract class BaseActivity extends Activity implements PasswordDialogFragment.PasswordDialogListener {
@@ -52,8 +56,25 @@ public abstract class BaseActivity extends Activity implements PasswordDialogFra
     @Override
     public void onResume() {
         super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
         checkLockStatus();
     }
+
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    Log.i(TAG, "OpenCV loaded successfully");
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, String candidatePassword) {

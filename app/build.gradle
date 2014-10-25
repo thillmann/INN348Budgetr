@@ -27,4 +27,6 @@ dependencies {
     compile project(':mpandroidchartlibrary-1-7-1')
     compile 'com.melnykov:floatingactionbutton:1.0.4'
     compile project(':HorizontalPicker')
+    compile project(':libraries:tess-two')
+    compile project(':opencv-android')
 }
