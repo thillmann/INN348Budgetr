@@ -100,6 +100,12 @@ public class MainActivity extends BaseActivity {
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(tabListener));
         }
+
+        Intent i = getIntent();
+        if (i != null) {
+            int item = i.getIntExtra("fragment", 0);
+            mViewPager.setCurrentItem(item);
+        }
     }
 
     @Override

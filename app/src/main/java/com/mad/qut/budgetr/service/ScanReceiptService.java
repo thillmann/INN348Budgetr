@@ -1,9 +1,11 @@
 package com.mad.qut.budgetr.service;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,16 +13,20 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.mad.qut.budgetr.Config;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.provider.FinanceContract;
+import com.mad.qut.budgetr.ui.MainActivity;
 import com.mad.qut.budgetr.ui.ReceiptScannerActivity;
 import com.mad.qut.budgetr.utils.DateUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -36,8 +42,12 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
     public static final String EXTRA_TEXT = "recognizedText";
     public static final String EXTRA_CATGEORY = "category";
 
+    public static final int NOTIFICATION_PROGRESS = 100;
+
     private String mCategory;
     private String mImagePath;
+    private NotificationManager mNotificationManager;
+    private boolean mImageDeleted = false;
 
     public ScanReceiptService() {
         super(TAG);
@@ -47,6 +57,7 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
     protected void onHandleIntent(Intent workIntent) {
         Log.d(TAG, "service started");
 
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mImagePath = workIntent.getStringExtra(EXTRA_IMAGE);
         mCategory = workIntent.getStringExtra(EXTRA_CATGEORY);
 
@@ -55,8 +66,6 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
         try {
             ExifInterface exif = new ExifInterface(mImagePath);
             int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-            String test = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
-            Log.v(TAG, "Orient 2: " + test);
 
             Log.v(TAG, "Orient: " + exifOrientation);
 
@@ -90,6 +99,13 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
                 bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
             }
             new ImageProcessingAsyncTask(bitmap, this).execute();
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_notification)
+                            .setContentTitle("Receipt Scan")
+                            .setContentText("Scanning in progress.")
+                            .setProgress(0, 0, true);
+            mNotificationManager.notify(NOTIFICATION_PROGRESS, mBuilder.build());
         } catch (IOException e) {
             Log.e(TAG, "Rotate or coversion failed: " + e.toString());
         }
@@ -102,11 +118,16 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
 
     @Override
     public void onProcessingFailed() {
+        if (!mImageDeleted) {
+            File image = new File(mImagePath);
+            mImageDeleted = image.delete();
+        }
+
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_notification)
-                        .setContentTitle("Scanning failed")
-                        .setContentText("Unfortunately the scanning process failed. Please try it again.")
+                        .setContentTitle("Receipt Scan")
+                        .setContentText("Scanning failed. Please try again.")
                         .setAutoCancel(true);
         Intent resultIntent = new Intent(this, ReceiptScannerActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
@@ -115,14 +136,18 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
                         resultIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT);
         mBuilder.setContentIntent(resultPendingIntent);
-        int notificationId = 500;
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(notificationId, mBuilder.build());
+        mNotificationManager.notify(NOTIFICATION_PROGRESS, mBuilder.build());
     }
 
     @Override
     public void onRecognitionFinished(String text) {
+        if (!mImageDeleted) {
+            File image = new File(mImagePath);
+            mImageDeleted = image.delete();
+        }
+
         text = text.trim();
+        //Log.d(TAG, text);
 
         // extract value
         Pattern currencyPattern = Pattern.compile("[\\$€]\\d+\\.\\d{2}");
@@ -132,37 +157,54 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
             values.add(currencyMatcher.group());
         }
         Collections.sort(values);
-        Log.d(TAG, values.toString());
+        //Log.d(TAG, values.toString());
         if (values.size() == 0) {
-            onProcessingFailed();
+            onRecognitionFailed();
             return;
         }
-        double parsedValue;
+        double parsedValue = 0;
         if (values.size() > 1) {
             for (String value : values) {
                 int i = text.indexOf(value);
+                String cleanString = value.replaceAll("[$€,]", "");
+                double parsed = Double.parseDouble(cleanString);
+                if (parsed > 0 && parsed > parsedValue) {
+                    // assume biggest value
+                    parsedValue = parsed;
+                }
             }
-            parsedValue = 0;
         } else {
-            parsedValue = Double.parseDouble(values.get(0).replace("[$€,]", ""));
+            String cleanString = values.get(0).replaceAll("[$€,]", "");
+            parsedValue = Double.parseDouble(cleanString);
+        }
+        if (parsedValue <= 0) {
+            onRecognitionFailed();
+            return;
         }
 
         // extract dates
-        Pattern datePattern = Pattern.compile("\\d{1,2}\\W\\d{1,2}\\W\\d{2,4}");
-        Matcher dateMatcher = datePattern.matcher(text);
-        List<String> dates = new ArrayList<String>();
-        while (dateMatcher.find()) {
-            dates.add(dateMatcher.group());
+        List<String[]> candidateDates = new ArrayList<String[]>();
+        String lcText = text.toLowerCase();
+        for (String regexp : DateUtils.DATE_FORMAT_REGEXPS.keySet()) {
+            Pattern pattern = Pattern.compile(regexp);
+            Matcher matcher = pattern.matcher(lcText);
+            while (matcher.find()) {
+                String[] date = { matcher.group(), DateUtils.DATE_FORMAT_REGEXPS.get(regexp) };
+                candidateDates.add(date);
+            }
         }
-        Log.d(TAG, dates.toString());
-        long date;
-        if (dates.size() > 0) {
+        //Log.d(TAG, candidateDates.toString());
+        long date = 0;
+        if (candidateDates.size() > 0) {
             // always select first found date
-            date = DateUtils.getTimeStampFromString(dates.get(0), "");
-        } else {
-            // if no date found assume current date
-            date = DateUtils.getCurrentTimeStamp();
+            String[] dateArray = candidateDates.get(0);
+            date = DateUtils.getTimeStampFromString(dateArray[0], dateArray[1]);
         }
+        if (date == 0) {
+            // if no date found assume current date
+            date = DateUtils.getCurrentTimeStamp() * 1000;
+        }
+        //Log.d(TAG, date+"");
 
         // Create transaction
         ContentValues transaction = new ContentValues();
@@ -176,10 +218,47 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
         transaction.put(FinanceContract.Transactions.CURRENCY_ID, Config.CURRENCY_ID);
         getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, transaction);
         getContentResolver().notifyChange(FinanceContract.Budgets.CONTENT_URI, null);
+
+        // notify
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle("Receipt Scan")
+                        .setContentText("Transaction successfully created.")
+                        .setAutoCancel(true);
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        int fragment = MainActivity.TAB_TRANSACTIONS;
+        resultIntent.putExtra("fragment", fragment);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                resultIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(resultPendingIntent);
+        mNotificationManager.notify(NOTIFICATION_PROGRESS, mBuilder.build());
     }
 
     @Override
     public void onRecognitionFailed() {
+        if (!mImageDeleted) {
+            File image = new File(mImagePath);
+            mImageDeleted = image.delete();
+        }
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_notification)
+                        .setContentTitle("Receipt Scan")
+                        .setContentText("Scanning failed. Please try again.")
+                        .setAutoCancel(true);
+        Intent resultIntent = new Intent(this, ReceiptScannerActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                resultIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(resultPendingIntent);
+        mNotificationManager.notify(NOTIFICATION_PROGRESS, mBuilder.build());
     }
 
 }

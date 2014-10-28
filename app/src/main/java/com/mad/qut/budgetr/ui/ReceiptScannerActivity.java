@@ -87,14 +87,14 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d(TAG, "Activity Result");
         switch (requestCode) {
             case CAPUTRE_IMAGE_ACTIVITY_REQUEST_CODE:
-                if (resultCode == Activity.RESULT_OK) {
-
-                } else {
+                if (resultCode != Activity.RESULT_OK) {
                     finish();
                 }
+                break;
+            default:
+                finish();
                 break;
         }
     }
@@ -106,10 +106,13 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
         mCategoriesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ((ImageView) view.findViewById(R.id.hover)).setVisibility(View.VISIBLE);
                 Intent mServiceIntent = new Intent(activity, ScanReceiptService.class);
                 mServiceIntent.putExtra(ScanReceiptService.EXTRA_IMAGE, mCurrentPhotoPath);
                 mServiceIntent.putExtra(ScanReceiptService.EXTRA_CATGEORY, view.getContentDescription().toString());
                 startService(mServiceIntent);
+                Toast.makeText(activity, "Scanning in progress.", Toast.LENGTH_SHORT).show();
+                activity.finish();
             }
         });
         getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);

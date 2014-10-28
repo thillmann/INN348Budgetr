@@ -4,9 +4,22 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Formatter;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class DateUtils {
+
+    public static final Map<String, String> DATE_FORMAT_REGEXPS = new HashMap<String, String>() {{
+        put("\\d{1,2}-\\d{1,2}-\\d{4}", "dd-MM-yyyy");
+        put("\\d{1,2}/\\d{1,2}/\\d{4}", "dd/MM/yyyy");
+        put("\\d{1,2}-\\d{1,2}-\\d{2}", "dd-MM-yy");
+        put("\\d{1,2}/\\d{1,2}/\\d{2}", "dd/MM/yy");
+        put("\\d{1,2}\\s[a-z]{3}\\s\\d{4}", "dd MMM yyyy");
+        put("\\d{1,2}\\s[a-z]{3}\\s\\d{2}", "dd MMM yy");
+        put("\\d{1,2}\\s[a-z]{4,}\\s\\d{4}", "dd MMMM yyyy");
+        put("\\d{1,2}\\s[a-z]{4,}\\s\\d{24}", "dd MMMM yy");
+    }};
 
     public static Calendar getClearCalendar() {
         Calendar cal = Calendar.getInstance();

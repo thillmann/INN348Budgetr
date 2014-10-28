@@ -143,22 +143,22 @@ public class FinanceProvider extends ContentProvider {
             case TRANSACTIONS: {
                 db.insertOrThrow(Tables.TRANSACTIONS, null, values);
                 notifyChange(uri);
-                return Transactions.buildTransactionUri(values.getAsString(Transactions.TRANSACTION_ID));
+                return Transactions.buildTransactionUri(values.getAsString(Transactions._ID));
             }
             case BUDGETS: {
                 db.insertOrThrow(Tables.BUDGETS, null, values);
                 notifyChange(uri);
-                return Budgets.buildBudgetUri(values.getAsString(Budgets.BUDGET_ID));
+                return Budgets.buildBudgetUri(values.getAsString(Budgets._ID));
             }
             case CATEGORIES: {
                 db.insertOrThrow(Tables.CATEGORIES, null, values);
                 notifyChange(uri);
-                return Categories.buildCategoryUri(values.getAsString(Categories.CATEGORY_ID));
+                return Categories.buildCategoryUri(values.getAsString(Categories._ID));
             }
             case CURRENCIES: {
                 db.insertOrThrow(Tables.CURRENCIES, null, values);
                 notifyChange(uri);
-                return Currencies.buildCurrencyUri(values.getAsString(Currencies.CURRENCY_ID));
+                return Currencies.buildCurrencyUri(values.getAsString(Currencies._ID));
             }
             default: {
                 throw new UnsupportedOperationException("Unknown insert uri: " + uri);
