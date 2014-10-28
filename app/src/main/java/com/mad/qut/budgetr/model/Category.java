@@ -12,6 +12,9 @@ public class Category {
 
     private static final String TAG = Category.class.getSimpleName();
 
+    public static final int ICON_SMALL = 48;
+    public static final int ICON_BIG = 100;
+
     public String id;
     public String name;
     public String type;
@@ -76,7 +79,7 @@ public class Category {
     }
 
     public static int getIcon(String categoryId, int size) {
-        if (size == 48) {
+        if (size == ICON_SMALL) {
             if (icons48dp.isEmpty()) {
                 initIcons48dp();
             }

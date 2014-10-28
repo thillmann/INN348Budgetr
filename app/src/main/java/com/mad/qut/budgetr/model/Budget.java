@@ -94,22 +94,26 @@ public class Budget {
                 + DateUtils.getFormattedDate(getCurrentEndDate(), "dd/MM/yyyy");
     }
 
-    /**
-     * What's left of the budget.
-     *
-     * @return double
-     */
     public double getAmountLeft(double amountSpent) {
         return amount-amountSpent;
     }
 
-    /**
-     * What's left of the budget as percentage.
-     *
-     * @return double
-     */
     public double getPercentLeft(double amountSpent) {
-        return Math.round(((getAmountLeft(amountSpent) / amount)) * 100d * 100d) / 100;
+        return Math.round(((getAmountLeft(amountSpent) / amount)) * 100d * 10d) / 10d;
+    }
+
+    public double getAverageSpent(double amountSpent) {
+        long currentDate = DateUtils.getCurrentTimeStamp();
+        long startDate = getCurrentStartDate() / 1000;
+        long daysElapsed = (currentDate - startDate) / (60 * 60 * 24) + 1;
+        return Math.round((amountSpent / daysElapsed) * 10d) / 10d;
+    }
+
+    public double getAverageLeft(double amountSpent) {
+        long currentDate = DateUtils.getCurrentTimeStamp();
+        long endDate = getCurrentEndDate() / 1000;
+        long daysLeft = (endDate - currentDate) / (60 * 60 * 24) + 1;
+        return Math.round((getAmountLeft(amountSpent) / daysLeft) * 10d) / 10d;
     }
 
     public String toJSON() {

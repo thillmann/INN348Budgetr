@@ -56,25 +56,8 @@ public abstract class BaseActivity extends Activity implements PasswordDialogFra
     @Override
     public void onResume() {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
         checkLockStatus();
     }
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, String candidatePassword) {
@@ -124,7 +107,7 @@ public abstract class BaseActivity extends Activity implements PasswordDialogFra
                 try {
                     String bootstrapJson = JSONHandler.parseResource(mContext, R.raw.bootstrap_data);
                     FinanceDataHandler dataHandler = new FinanceDataHandler(mContext);
-                    dataHandler.applyConferenceData(new String[]{bootstrapJson},
+                    dataHandler.applyFinanceData(new String[]{bootstrapJson},
                             Config.BOOTSTRAP_DATA_TIMESTAMP);
                     getContentResolver().notifyChange(Uri.parse(FinanceContract.CONTENT_AUTHORITY),
                             null, false);

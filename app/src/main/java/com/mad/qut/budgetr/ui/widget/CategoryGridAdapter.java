@@ -46,7 +46,7 @@ public class CategoryGridAdapter extends CursorAdapter {
         ImageView backgroundView = (ImageView) view.findViewById(R.id.background);
         TextView nameView = (TextView) view.findViewById(R.id.name);
 
-        backgroundView.setImageResource(Category.getIcon(id, 100));
+        backgroundView.setImageResource(Category.getIcon(id, Category.ICON_BIG));
         nameView.setText(name);
 
         ImageView hover = (ImageView) view.findViewById(R.id.hover);

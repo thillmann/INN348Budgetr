@@ -52,8 +52,7 @@
                         android:id="@+id/balance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        style="@style/SecondaryTextStyle"
-                        android:visibility="gone" />
+                        style="@style/SecondaryTextStyle" />
 
                 </LinearLayout>
 
@@ -108,8 +107,7 @@
                         android:id="@+id/income"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        style="@style/SecondaryTextStyle"
-                        android:visibility="gone" />
+                        style="@style/SecondaryTextStyle" />
 
                 </LinearLayout>
 
@@ -158,8 +156,7 @@
                         android:id="@+id/expenses"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        style="@style/SecondaryTextStyle"
-                        android:visibility="gone" />
+                        style="@style/SecondaryTextStyle" />
 
                 </LinearLayout>
 

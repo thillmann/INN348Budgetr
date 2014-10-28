@@ -48,7 +48,7 @@ public class SettingsActivity extends BaseActivity implements SharedPreferences.
         else if (PrefUtils.PREF_PASSWORD.equals(key)) {
             mSettingsFragment.setTitle(PrefUtils.PREF_PASSWORD, R.string.pref_title_change_password);
             //mSettingsFragment.setSummary(PrefUtils.PREF_PASSWORD, R.string.pref_summary_change_password);
-        }
+        /*}
         else if (PrefUtils.PREF_CURRENCY.equals(key)) {
             String[] currencies = getResources().getStringArray(R.array.currencies);
             String[] currenciesAlias = getResources().getStringArray(R.array.currencies_alias);
@@ -60,7 +60,11 @@ public class SettingsActivity extends BaseActivity implements SharedPreferences.
                     break;
                 }
             }
-            mSettingsFragment.setSummary(PrefUtils.PREF_CURRENCY, currencies[j]);
+            mSettingsFragment.setSummary(PrefUtils.PREF_CURRENCY, currencies[j]);*/
+        } else if (PrefUtils.PREF_DELETE_TRANSACTIONS.equals(key)) {
+
+        } else if (PrefUtils.PREF_DELETE_BUDGETS.equals(key)) {
+
         }
     }
 
@@ -71,7 +75,7 @@ public class SettingsActivity extends BaseActivity implements SharedPreferences.
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
             //PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
-            if (PrefUtils.isCurrencySet(getActivity())) {
+            /*if (PrefUtils.isCurrencySet(getActivity())) {
                 String[] currencies = getResources().getStringArray(R.array.currencies);
                 String[] currenciesAlias = getResources().getStringArray(R.array.currencies_alias);
                 String defaultCurrency = PrefUtils.getCurrency(getActivity());
@@ -83,7 +87,7 @@ public class SettingsActivity extends BaseActivity implements SharedPreferences.
                     }
                 }
                 setSummary(PrefUtils.PREF_CURRENCY, currencies[j]);
-            }
+            }*/
             if (PrefUtils.isPasswordSet(getActivity())) {
                 setTitle(PrefUtils.PREF_PASSWORD, R.string.pref_title_change_password);
             }

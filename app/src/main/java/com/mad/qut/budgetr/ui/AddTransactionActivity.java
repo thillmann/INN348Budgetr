@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.Toast;
 
+import com.mad.qut.budgetr.Config;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
@@ -73,7 +74,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         mTransaction.amount = 0.0;
         mTransaction.category = "";
         // TODO: Use currency from settings
-        mTransaction.currency = "aud";
+        mTransaction.currency = Config.CURRENCY_ID;
         mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
         Calendar calendar = Calendar.getInstance();
         mTransaction.date = calendar.getTime().getTime();
@@ -254,16 +255,12 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        boolean isEmpty = data.getCount() == 0;
-        Log.d(TAG, data.getCount() + "");
         mGridAdapter.swapCursor(data);
-        //mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mGridAdapter.swapCursor(null);
-        //mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private interface CategoryQuery {

@@ -134,7 +134,7 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
         mStartDateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mBudget.startDate = DateUtils.getTimeStampFromString(startingDates.get(i).toString());
+                mBudget.startDate = DateUtils.getTimeStampFromString(startingDates.get(i).toString(), "dd/MM/yyyy");
             }
 
             @Override

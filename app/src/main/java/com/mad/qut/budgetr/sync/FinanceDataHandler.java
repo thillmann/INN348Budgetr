@@ -27,12 +27,8 @@ public class FinanceDataHandler {
 
     private static final String TAG = FinanceDataHandler.class.getSimpleName();
 
-    // Shared preferences key under which we store the timestamp that corresponds to
-    // the data we currently have in our content provider.
     private static final String SP_KEY_DATA_TIMESTAMP = "data_timestamp";
 
-    // symbolic timestamp to use when we are missing timestamp data (which means our data is
-    // really old or nonexistent)
     private static final String DEFAULT_TIMESTAMP = "Sat, 1 Jan 2000 00:00:00 GMT";
 
     private static final String DATA_KEY_CATEGORIES = "categories";
@@ -54,27 +50,15 @@ public class FinanceDataHandler {
     TransactionsHandler mTransactionsHandler = null;
     BudgetsHandler mBudgetsHandler = null;
 
-    // Convenience map that maps the key name to its corresponding handler (e.g.
-    // "blocks" to mBlocksHandler (to avoid very tedious if-elses)
     HashMap<String, JSONHandler> mHandlerForKey = new HashMap<String, JSONHandler>();
 
-    // Tally of total content provider operations we carried out (for statistical purposes)
     private int mContentProviderOperationsDone = 0;
 
     public FinanceDataHandler(Context context) {
         mContext = context;
     }
 
-    /**
-     * Parses the conference data in the given objects and imports the data into the
-     * content provider. The format of the data is documented at https://code.google.com/p/iosched.
-     *
-     * @param dataBodies The collection of JSON objects to parse and import.
-     * @param dataTimestamp The timestamp of the data. This should be in RFC1123 format.
-     * @throws java.io.IOException If there is a problem parsing the data.
-     */
-    public void applyConferenceData(String[] dataBodies, String dataTimestamp) throws IOException {
-        // create handlers for each data type
+    public void applyFinanceData(String[] dataBodies, String dataTimestamp) throws IOException {
         mHandlerForKey.put(DATA_KEY_CATEGORIES, mCategoriesHandler = new CategoriesHandler(mContext));
         mHandlerForKey.put(DATA_KEY_CURRENCIES, mCurrenciesHandler = new CurrenciesHandler(mContext));
         mHandlerForKey.put(DATA_KEY_TRANSACTIONS, mTransactionsHandler = new TransactionsHandler(mContext));
@@ -84,7 +68,6 @@ public class FinanceDataHandler {
             processDataBody(dataBodies[i]);
         }
 
-        // produce the necessary content provider operations
         ArrayList<ContentProviderOperation> batch = new ArrayList<ContentProviderOperation>();
         for (String key : DATA_KEYS_IN_ORDER) {
             mHandlerForKey.get(key).makeContentProviderOperations(batch);
@@ -117,9 +100,8 @@ public class FinanceDataHandler {
         JsonReader reader = new JsonReader(new StringReader(dataBody));
         JsonParser parser = new JsonParser();
         try {
-            reader.setLenient(true); // To err is human
+            reader.setLenient(true);
 
-            // the whole file is a single JSON object
             reader.beginObject();
 
             while (reader.hasNext()) {
@@ -138,19 +120,16 @@ public class FinanceDataHandler {
         }
     }
 
-    // Returns the timestamp of the data we have in the content provider.
     public String getDataTimestamp() {
         return PreferenceManager.getDefaultSharedPreferences(mContext).getString(
                 SP_KEY_DATA_TIMESTAMP, DEFAULT_TIMESTAMP);
     }
 
-    // Sets the timestamp of the data we have in the content provider.
     public void setDataTimestamp(String timestamp) {
         PreferenceManager.getDefaultSharedPreferences(mContext).edit().putString(
                 SP_KEY_DATA_TIMESTAMP, timestamp).commit();
     }
 
-    // Reset the timestamp of the data we have in the content provider
     public static void resetDataTimestamp(final Context context) {
         PreferenceManager.getDefaultSharedPreferences(context).edit().remove(
                 SP_KEY_DATA_TIMESTAMP).commit();

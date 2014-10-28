@@ -118,18 +118,15 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         mBalanceChart.setVisibility(View.GONE);
 
         tvBalance.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
-        tvBalance.setVisibility(View.VISIBLE);
         tvBalanceValue.setText(NumberUtils.getFormattedCurrency(0));
         tvBalanceValue.setTextColor(getResources().getColor(R.color.body_text_1));
 
         tvIncome.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
-        tvIncome.setVisibility(View.VISIBLE);
         tvIncomeValue.setText(NumberUtils.getFormattedCurrency(0));
 
         mExpenseChart.setVisibility(View.GONE);
 
         tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
-        tvExpenses.setVisibility(View.VISIBLE);
 
         tvExpensesValue.setText(NumberUtils.getFormattedCurrency(0));
     }
@@ -274,7 +271,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             mBalanceChart.invalidate();
 
             tvBalance.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
-            tvBalance.setVisibility(View.VISIBLE);
 
             tvBalanceValue.setText(NumberUtils.getFormattedCurrency(totalValue));
             if (totalValue > 0) {
@@ -286,7 +282,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             }
 
             tvIncome.setText(getResources().getQuantityString(R.plurals.number_transactions, valsIncome.size(), valsIncome.size()));
-            tvIncome.setVisibility(View.VISIBLE);
 
             tvIncomeValue.setText(NumberUtils.getFormattedCurrency(totalIncome));
         }
@@ -295,6 +290,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
     private void setupExpenseChart() {
         mExpenseChart.setDescription("");
         mExpenseChart.setDrawCenterText(true);
+        mExpenseChart.setCenterTextSize(14f);
         mExpenseChart.setDrawYValues(true);
         mExpenseChart.setDrawXValues(false);
         mExpenseChart.setUsePercentValues(true);
@@ -306,7 +302,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             public void onValueSelected(Entry entry, int i) {
                 PieData data = mExpenseChart.getDataOriginal();
                 mExpenseChart.setCenterText(data.getXVals().get(entry.getXIndex()));
-                mExpenseChart.setCenterTextSize(14f);
             }
 
             @Override
@@ -346,7 +341,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             mExpenseChart.invalidate();
 
             tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, count, count));
-            tvExpenses.setVisibility(View.VISIBLE);
 
             tvExpensesValue.setText(NumberUtils.getFormattedCurrency(totalValue));
         }

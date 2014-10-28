@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.mad.qut.budgetr.Config;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Budget;
 import com.mad.qut.budgetr.provider.FinanceContract;
@@ -76,7 +77,7 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
         mBudget.startDate = -1;
         mBudget.category = "";
         // TODO: Use currency from settings
-        mBudget.currency = "aud";
+        mBudget.currency = Config.CURRENCY_ID;
     }
 
     private void populateBudgetTypes() {
@@ -123,7 +124,7 @@ public class AddBudgetActivity extends BaseActivity implements LoaderManager.Loa
         mStartDateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mBudget.startDate = DateUtils.getTimeStampFromString(startingDates.get(i).toString());
+                mBudget.startDate = DateUtils.getTimeStampFromString(startingDates.get(i).toString(), "dd/MM/yyyy");
             }
 
             @Override

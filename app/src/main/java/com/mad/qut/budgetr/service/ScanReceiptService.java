@@ -1,25 +1,28 @@
 package com.mad.qut.budgetr.service;
 
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.mad.qut.budgetr.Config;
 import com.mad.qut.budgetr.R;
-import com.mad.qut.budgetr.ui.MainActivity;
+import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.ui.ReceiptScannerActivity;
+import com.mad.qut.budgetr.utils.DateUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +34,10 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
     public static final String BROADCAST_ACTION = "com.mad.qut.budgetr.scan";
     public static final String EXTRA_IMAGE = "imageFromCamera";
     public static final String EXTRA_TEXT = "recognizedText";
+    public static final String EXTRA_CATGEORY = "category";
+
+    private String mCategory;
+    private String mImagePath;
 
     public ScanReceiptService() {
         super(TAG);
@@ -39,11 +46,14 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
     @Override
     protected void onHandleIntent(Intent workIntent) {
         Log.d(TAG, "service started");
-        String imagePath = workIntent.getStringExtra(EXTRA_IMAGE);
+
+        mImagePath = workIntent.getStringExtra(EXTRA_IMAGE);
+        mCategory = workIntent.getStringExtra(EXTRA_CATGEORY);
+
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmOptions);
+        Bitmap bitmap = BitmapFactory.decodeFile(mImagePath, bmOptions);
         try {
-            ExifInterface exif = new ExifInterface(imagePath);
+            ExifInterface exif = new ExifInterface(mImagePath);
             int exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
             String test = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
             Log.v(TAG, "Orient 2: " + test);
@@ -87,7 +97,6 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
 
     @Override
     public void onProcessingFinished(Bitmap image) {
-        Log.d(TAG, "image processed");
         new TextRecognitionAsyncTask(this, image, this).execute();
     }
 
@@ -113,9 +122,31 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
 
     @Override
     public void onRecognitionFinished(String text) {
-        Log.d(TAG, "text recognized");
         text = text.trim();
-        // extract information from text
+
+        // extract value
+        Pattern currencyPattern = Pattern.compile("[\\$€]\\d+\\.\\d{2}");
+        Matcher currencyMatcher = currencyPattern.matcher(text);
+        List<String> values = new ArrayList<String>();
+        while (currencyMatcher.find()) {
+            values.add(currencyMatcher.group());
+        }
+        Collections.sort(values);
+        Log.d(TAG, values.toString());
+        if (values.size() == 0) {
+            onProcessingFailed();
+            return;
+        }
+        double parsedValue;
+        if (values.size() > 1) {
+            for (String value : values) {
+                int i = text.indexOf(value);
+            }
+            parsedValue = 0;
+        } else {
+            parsedValue = Double.parseDouble(values.get(0).replace("[$€,]", ""));
+        }
+
         // extract dates
         Pattern datePattern = Pattern.compile("\\d{1,2}\\W\\d{1,2}\\W\\d{2,4}");
         Matcher dateMatcher = datePattern.matcher(text);
@@ -124,20 +155,27 @@ public class ScanReceiptService extends IntentService implements ImageProcessing
             dates.add(dateMatcher.group());
         }
         Log.d(TAG, dates.toString());
-        // extract value
-        Pattern currencyPattern = Pattern.compile("[\\$€]\\d+\\.\\d{2}");
-        Matcher currencyMatcher = currencyPattern.matcher(text);
-        List<String> values = new ArrayList<String>();
-        while (currencyMatcher.find()) {
-            values.add(currencyMatcher.group());
+        long date;
+        if (dates.size() > 0) {
+            // always select first found date
+            date = DateUtils.getTimeStampFromString(dates.get(0), "");
+        } else {
+            // if no date found assume current date
+            date = DateUtils.getCurrentTimeStamp();
         }
-        Log.d(TAG, values.toString());
-        // broadcast
-        Intent intent = new Intent();
-        intent.setAction(BROADCAST_ACTION);
-        intent.putExtra(EXTRA_TEXT, text);
-        sendBroadcast(intent);
+
         // Create transaction
+        ContentValues transaction = new ContentValues();
+        transaction.put(FinanceContract.Transactions.TRANSACTION_ID, UUID.randomUUID().toString());
+        transaction.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, parsedValue);
+        transaction.put(FinanceContract.Transactions.TRANSACTION_DATE, date);
+        transaction.put(FinanceContract.Transactions.TRANSACTION_REPEAT, FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER);
+        transaction.put(FinanceContract.Transactions.TRANSACTION_REMINDER, FinanceContract.Transactions.TRANSACTION_REMINDER_NEVER);
+        transaction.put(FinanceContract.Transactions.TRANSACTION_TYPE, FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE);
+        transaction.put(FinanceContract.Transactions.CATEGORY_ID, mCategory);
+        transaction.put(FinanceContract.Transactions.CURRENCY_ID, Config.CURRENCY_ID);
+        getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, transaction);
+        getContentResolver().notifyChange(FinanceContract.Budgets.CONTENT_URI, null);
     }
 
     @Override

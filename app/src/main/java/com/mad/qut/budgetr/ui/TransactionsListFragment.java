@@ -178,7 +178,7 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
             TextView mAmount = (TextView) view.findViewById(R.id.amount);
             TextView mDate = (TextView) view.findViewById(R.id.date);
 
-            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID), 48));
+            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID), Category.ICON_SMALL));
 
             mCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
 

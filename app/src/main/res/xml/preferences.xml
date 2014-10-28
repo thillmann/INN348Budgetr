@@ -2,13 +2,14 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
-        android:title="@string/pref_general_title"
-        android:key="pref_general_settings">
-        <ListPreference
-            android:title="@string/pref_title_currency"
-            android:key="pref_currency"
-            android:entries="@array/currencies"
-            android:entryValues="@array/currencies_alias" />
+        android:title="Batch Actions"
+        android:key="pref_batch_settings">
+        <Preference
+            android:title="Delete all transactions"
+            android:key="pref_delete_transactions" />
+        <Preference
+            android:title="Delete all budgets"
+            android:key="pref_delete_budgets" />
     </PreferenceCategory>
     <PreferenceCategory
         android:title="@string/pref_security_title"

@@ -84,7 +84,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Intent iBudget = new Intent();
-                iBudget.setClass(getActivity(), EditBudgetActivity.class);
+                iBudget.setClass(getActivity(), BudgetDetailActivity.class);
 
                 Cursor cursor = (Cursor) mListView.getItemAtPosition(i);
 
@@ -160,7 +160,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
     private class BudgetCursorAdapter extends CursorAdapter {
 
         LayoutInflater mLayoutInflater;
-        LoaderManager.LoaderCallbacks mCallback;
 
         public BudgetCursorAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -188,7 +187,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             TextView mTimeSpan = (TextView) view.findViewById(R.id.time_span);
             TextView mAmountSpent = (TextView) view.findViewById(R.id.amount_spent);
 
-            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(BudgetQuery.CATEGORY_ID), 48));
+            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(BudgetQuery.CATEGORY_ID), Category.ICON_SMALL));
 
             mName.setText(cursor.getString(BudgetQuery.NAME));
 
@@ -235,7 +234,11 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
             @Override
             protected void onPostExecute(Double amountSpent) {
-                mTextView.setText(mBudget.getPercentLeft(amountSpent) + "%");
+                double percentLeft = mBudget.getPercentLeft(amountSpent);
+                if (percentLeft < 25) {
+                    mTextView.setTextColor(getResources().getColor(R.color.expense));
+                }
+                mTextView.setText(percentLeft + "%");
             }
 
         }

@@ -35,9 +35,9 @@ public class DateUtils {
         return df.format(startDate) + " " + delimiter + " " + df.format(endDate);
     }
 
-    public static long getTimeStampFromString(String date) {
+    public static long getTimeStampFromString(String date, String format) {
         try {
-            Date d = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH).parse(date);
+            Date d = new SimpleDateFormat(format, Locale.ENGLISH).parse(date);
             return d.getTime();
         } catch (Exception e) {
             return -1;
@@ -45,7 +45,7 @@ public class DateUtils {
     }
 
     public static long getCurrentTimeStamp() {
-        Calendar c = Calendar.getInstance();
+        Calendar c = getClearCalendar();
         return c.getTimeInMillis() / 1000;
     }
 

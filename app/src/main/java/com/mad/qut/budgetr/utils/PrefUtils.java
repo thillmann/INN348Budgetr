@@ -11,7 +11,10 @@ public class PrefUtils {
     public static final String PREF_PASSWORD_ENABLED = "pref_password_enabled";
     public static final String PREF_PASSWORD = "pref_password";
     public static final String PREF_CURRENCY = "pref_currency";
+    public static final String PREF_CUERRENCY_SYMBOL = "pref_currency_symbol";
     public static final String PREF_DATA_BOOTSTRAP_DONE = "pref_data_bootstrap_done";
+    public static final String PREF_DELETE_TRANSACTIONS = "pref_delete_transactions";
+    public static final String PREF_DELETE_BUDGETS = "pref_delete_budgets";
 
     private static Context mContext;
     private static SharedPreferences mSharedPreferences;

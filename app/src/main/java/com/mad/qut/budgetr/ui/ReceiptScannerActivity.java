@@ -19,16 +19,21 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.provider.FinanceContract;
-import com.mad.qut.budgetr.receiver.ScanReceiptReceiver;
 import com.mad.qut.budgetr.service.ScanReceiptService;
 import com.mad.qut.budgetr.ui.widget.CategoryGridAdapter;
 import com.mad.qut.budgetr.ui.widget.CategoryGridView;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -62,6 +67,7 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
         setContentView(R.layout.activity_receipt_scanner);
 
         mCategoriesGrid = (CategoryGridView) findViewById(R.id.categories);
+        displayCategories();
 
         Intent iCamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (iCamera.resolveActivity(getPackageManager()) != null) {
@@ -85,10 +91,7 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
         switch (requestCode) {
             case CAPUTRE_IMAGE_ACTIVITY_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
-                    Intent mServiceIntent = new Intent(this, ScanReceiptService.class);
-                    mServiceIntent.putExtra(ScanReceiptService.EXTRA_IMAGE, mCurrentPhotoPath);
-                    Log.d(TAG, "start service");
-                    startService(mServiceIntent);
+
                 } else {
                     finish();
                 }
@@ -96,21 +99,19 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.receipt_scanner, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        return true;
-    }
-
     public void displayCategories() {
         mGridAdapter = new CategoryGridAdapter(this, null, 0);
         mCategoriesGrid.setAdapter(mGridAdapter);
+        final Activity activity = this;
+        mCategoriesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Intent mServiceIntent = new Intent(activity, ScanReceiptService.class);
+                mServiceIntent.putExtra(ScanReceiptService.EXTRA_IMAGE, mCurrentPhotoPath);
+                mServiceIntent.putExtra(ScanReceiptService.EXTRA_CATGEORY, view.getContentDescription().toString());
+                startService(mServiceIntent);
+            }
+        });
         getLoaderManager().restartLoader(CategoryQuery._TOKEN, null, this);
     }
 
@@ -146,5 +147,27 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
         int CATEGORY_ID = 1;
         int NAME = 2;
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_6, this, mLoaderCallback);
+    }
+
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    Log.i(TAG, "OpenCV loaded successfully");
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
 
 }

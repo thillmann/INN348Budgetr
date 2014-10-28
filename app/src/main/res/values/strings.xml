@@ -131,6 +131,23 @@
     <string name="okay">OK</string>
     <string name="about_title">About</string>
     <string name="about_message">Budgetr was created by Timo Hillmann.</string>
+    <string name="title_activity_add_transaction">Add Transaction</string>
+    <string name="title_activity_edit_transaction">Edit Transaction</string>
+    <string name="title_activity_select_category">Select Category</string>
+    <string name="amount_left">Left</string>
+    <string name="title_activity_budget_detail">Budget</string>
+    <string name="action_edit">Edit</string>
+    <string name="amount_spent">Spent</string>
+
+    <plurals name="average_spent">
+        <item quantity="zero"></item>
+        <item quantity="other">%s spent per day</item>
+    </plurals>
+
+    <plurals name="average_left">
+        <item quantity="zero"></item>
+        <item quantity="other">%s left per day</item>
+    </plurals>
 
     <plurals name="number_transactions">
         <item quantity="zero">no transactions</item>

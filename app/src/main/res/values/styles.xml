@@ -19,6 +19,7 @@
     </style>
 
     <style name="ActionBarTheme" parent="@android:style/Widget.Holo.Light.ActionBar">
+        <item name="android:icon">@drawable/ic_action_bar</item>
         <item name="android:background">@color/theme_primary</item>
         <item name="android:titleTextStyle">@style/ActionBarTitleTextStyle</item>
     </style>
