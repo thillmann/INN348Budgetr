@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -19,7 +20,7 @@ public class SelectionBuilder {
     private static final String TAG = SelectionBuilder.class.getSimpleName();
 
     private String mTable = null;
-    private Map<String, String> mProjectionMap = Maps.newHashMap();
+    private Map<String, String> mProjectionMap = new HashMap<String, String>();
     private StringBuilder mSelection = new StringBuilder();
     private ArrayList<String> mSelectionArgs = Lists.newArrayList();
     private String mGroupBy = null;

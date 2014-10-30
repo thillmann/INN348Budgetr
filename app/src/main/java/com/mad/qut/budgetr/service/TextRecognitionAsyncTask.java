@@ -22,10 +22,24 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
 
     private static final String TAG = TextRecognitionAsyncTask.class.getSimpleName();
 
+    /**
+     * Storage location on sdcard.
+     */
     private static final String BASE_PATH = Environment.getExternalStorageDirectory() + "/budgetr/";
     private static final String DATA_DIR = "tessdata/";
     private static final String LANG = "eng";
+
+    /**
+     * Engine mode:
+     *  0 for default (only tesseract)
+     *  1 for cube only
+     *  2 for combined (very slow)
+     */
     private static final int ENGINE_MODE = 0; // 2 for combined (Cube + Default)
+
+    /**
+     * Data files for tesseract.
+     */
     private static final String[] DATA_FILES = {
             ".cube.bigrams",
             ".cube.fold",
@@ -73,8 +87,9 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
             }
         }
 
+        // create instance of tesseract
         TessBaseAPI baseApi = new TessBaseAPI();
-        baseApi.setDebug(true);
+        //baseApi.setDebug(true);
         baseApi.init(BASE_PATH, LANG, ENGINE_MODE);
 
         if (mImage != null) {
@@ -89,8 +104,10 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
     @Override
     protected void onPostExecute(String text) {
         if (text.equals("")) {
+            // if no text found call error method
             mListener.onRecognitionFailed();
         } else {
+            // otherwise call success method
             mListener.onRecognitionFinished(text);
         }
     }
@@ -99,6 +116,7 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
         // Check folder structure
         String[] paths = new String[] {BASE_PATH, BASE_PATH + DATA_DIR };
 
+        // create directories if they don't exist
         for (String path : paths) {
             File dir = new File(path);
             if (!dir.exists()) {
@@ -113,6 +131,7 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
         }
 
         Log.d(TAG, "installing from zip");
+        // install training data from zip file in assets directory
         String sourceFile = "tesseract-ocr-3.02." + LANG + ".zip";
         installZipFromAssets(sourceFile);
 
@@ -121,8 +140,10 @@ public class TextRecognitionAsyncTask extends AsyncTask<Void, Integer, String> {
     private void installZipFromAssets(String sourceFile) throws IOException{
         String destination = BASE_PATH + DATA_DIR;
 
+        // Read zip
         ZipInputStream inputStream = new ZipInputStream(mContext.getAssets().open(sourceFile));
         for (ZipEntry entry = inputStream.getNextEntry(); entry != null; entry = inputStream.getNextEntry()) {
+            // get file in zip
             File destinationFile = new File(destination, entry.getName());
 
             long zippedFileSize = entry.getSize();

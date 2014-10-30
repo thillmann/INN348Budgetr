@@ -70,14 +70,13 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         mButtonDate = (Button) findViewById(R.id.button_date);
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
         mButtonRepeating = (Button) findViewById(R.id.button_repeating);
-        mButtonRepeating.setText(mTransaction.repeat);
+        mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.repeat]);
         mButtonReminder = (Button) findViewById(R.id.button_reminder);
-        mButtonReminder.setText(mTransaction.reminder);
+        mButtonReminder.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.reminder]);
         Button mDelete = (Button) findViewById(R.id.delete);
         mDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Delete
                 getContentResolver().delete(updateUri, null, null);
                 mActivity.finish();
             }
@@ -111,11 +110,11 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mAmountEdit.getCurrencyValue() == 0) {
-                Toast.makeText(this, R.string.no_amount, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_amount, Toast.LENGTH_LONG).show();
                 return true;
             }
             if (mCategoriesGrid.getSelection().equals("")) {
-                Toast.makeText(this, R.string.no_category, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_category, Toast.LENGTH_LONG).show();
                 return true;
             }
             // INSERT INTO DB
@@ -127,7 +126,6 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
             values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
             values.put(FinanceContract.Transactions.TRANSACTION_TYPE, mTransaction.type);
             values.put(FinanceContract.Transactions.CATEGORY_ID, mCategoriesGrid.getSelection());
-            values.put(FinanceContract.Transactions.CURRENCY_ID, mTransaction.currency);
             getContentResolver().update(updateUri, values, null, null);
             this.finish();
             return true;
@@ -186,8 +184,8 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
     }
 
     public void onRepeatSet(int selection) {
-        mTransaction.repeat = getResources().getStringArray(R.array.repeats_alias)[selection];
-        mButtonRepeating.setText(getResources().getStringArray(R.array.repeats)[selection]);
+        mTransaction.repeat = selection;
+        mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[selection]);
     }
 
     public static class RepeatPickerFragment extends DialogFragment {
@@ -196,7 +194,7 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(R.string.dialog_pick_repeat)
-                    .setItems(R.array.repeats,  new DialogInterface.OnClickListener() {
+                    .setItems(R.array.transaction_repeats,  new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             ((EditTransactionActivity) getActivity()).onRepeatSet(which);
                         }
@@ -212,8 +210,8 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
     }
 
     public void onReminderSet(int selection) {
-        mTransaction.reminder = getResources().getStringArray(R.array.reminders_alias)[selection];
-        mButtonReminder.setText(getResources().getStringArray(R.array.reminders)[selection]);
+        mTransaction.reminder = selection;
+        mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[selection]);
     }
 
     public static class ReminderPickerFragment extends DialogFragment {
@@ -222,7 +220,7 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(R.string.dialog_pick_reminder)
-                    .setItems(R.array.reminders,  new DialogInterface.OnClickListener() {
+                    .setItems(R.array.transaction_reminders,  new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             ((EditTransactionActivity) getActivity()).onReminderSet(which);
                         }

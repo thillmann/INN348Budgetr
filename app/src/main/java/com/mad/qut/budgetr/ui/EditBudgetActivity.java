@@ -159,15 +159,15 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mNameEdit.getText().toString().equals("")) {
-                Toast.makeText(this, R.string.no_name, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_name, Toast.LENGTH_LONG).show();
                 return true;
             }
             if (mAmountEdit.getCurrencyValue() == 0) {
-                Toast.makeText(this, R.string.no_amount, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_amount, Toast.LENGTH_LONG).show();
                 return true;
             }
             if (mCategoriesGrid.getSelection().equals("")) {
-                Toast.makeText(this, R.string.no_category, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_category, Toast.LENGTH_LONG).show();
                 return true;
             }
             // INSERT INTO DB
@@ -178,7 +178,6 @@ public class EditBudgetActivity extends BaseActivity implements LoaderManager.Lo
             values.put(FinanceContract.Budgets.BUDGET_TYPE, mBudget.type);
             values.put(FinanceContract.Budgets.BUDGET_START_DATE, mBudget.startDate);
             values.put(FinanceContract.Budgets.CATEGORY_ID, mCategoriesGrid.getSelection());
-            values.put(FinanceContract.Budgets.CURRENCY_ID, mBudget.currency);
             getContentResolver().update(updateUri, values, null, null);
             this.finish();
             return true;

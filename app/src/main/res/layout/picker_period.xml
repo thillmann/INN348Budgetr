@@ -46,7 +46,7 @@
         android:padding="16dp"
         android:ellipsize="none"
         android:marqueeRepeatLimit="1"
-        app:values="@array/repeats"
+        app:values="@array/transaction_repeats"
         android:focusable="true"
         android:focusableInTouchMode="true"
         app:dividerSize="16dp"

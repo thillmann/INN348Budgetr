@@ -10,6 +10,9 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 import com.mad.qut.budgetr.utils.LruBitmapCache;
 
+/**
+ * AppController handels possible volley requests.
+ */
 public class AppController extends Application {
 
     private static final String TAG = AppController.class.getSimpleName();

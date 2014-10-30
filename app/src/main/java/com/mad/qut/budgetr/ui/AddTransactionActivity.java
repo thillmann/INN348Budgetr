@@ -12,7 +12,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.BaseColumns;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,7 +19,6 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.Toast;
 
-import com.mad.qut.budgetr.Config;
 import com.mad.qut.budgetr.R;
 import com.mad.qut.budgetr.model.Transaction;
 import com.mad.qut.budgetr.provider.FinanceContract;
@@ -73,10 +71,8 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         // default values for transaction
         mTransaction.amount = 0.0;
         mTransaction.category = "";
-        // TODO: Use currency from settings
-        mTransaction.currency = Config.CURRENCY_ID;
         mTransaction.type = FinanceContract.Transactions.TRANSACTION_TYPE_EXPENSE;
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = DateUtils.getClearCalendar();
         mTransaction.date = calendar.getTime().getTime();
         mTransaction.repeat = FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER;
         mTransaction.reminder = FinanceContract.Transactions.TRANSACTION_REMINDER_NEVER;
@@ -110,11 +106,11 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mAmountEdit.getCurrencyValue() == 0) {
-                Toast.makeText(this, R.string.no_amount, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_amount, Toast.LENGTH_LONG).show();
                 return true;
             }
             if (mCategoriesGrid.getSelection().equals("")) {
-                Toast.makeText(this, R.string.no_category, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_no_category, Toast.LENGTH_LONG).show();
                 return true;
             }
             // INSERT INTO DB
@@ -126,10 +122,10 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
             values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
             values.put(FinanceContract.Transactions.TRANSACTION_TYPE, mTransaction.type);
             values.put(FinanceContract.Transactions.CATEGORY_ID, mCategoriesGrid.getSelection());
-            values.put(FinanceContract.Transactions.CURRENCY_ID, mTransaction.currency);
             getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, values);
             // Notify changes for budgets
             getContentResolver().notifyChange(FinanceContract.Budgets.CONTENT_URI, null);
+
             this.finish();
             return true;
         }
@@ -187,8 +183,15 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
     }
 
     public void onRepeatSet(int selection) {
-        mTransaction.repeat = getResources().getStringArray(R.array.repeats_alias)[selection];
-        mButtonRepeating.setText(getResources().getStringArray(R.array.repeats)[selection]);
+        mTransaction.repeat = selection;
+        mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[selection]);
+        if (selection == FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+            mButtonReminder.setEnabled(false);
+            mTransaction.reminder = FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER;
+            mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[mTransaction.reminder]);
+        } else {
+            mButtonReminder.setEnabled(true);
+        }
     }
 
     public static class RepeatPickerFragment extends DialogFragment {
@@ -197,7 +200,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(R.string.dialog_pick_repeat)
-                    .setItems(R.array.repeats,  new DialogInterface.OnClickListener() {
+                    .setItems(R.array.transaction_repeats,  new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             ((AddTransactionActivity) getActivity()).onRepeatSet(which);
                         }
@@ -213,8 +216,8 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
     }
 
     public void onReminderSet(int selection) {
-        mTransaction.reminder = getResources().getStringArray(R.array.reminders_alias)[selection];
-        mButtonReminder.setText(getResources().getStringArray(R.array.reminders)[selection]);
+        mTransaction.reminder = selection;
+        mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[selection]);
     }
 
     public static class ReminderPickerFragment extends DialogFragment {
@@ -223,7 +226,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(R.string.dialog_pick_reminder)
-                    .setItems(R.array.reminders,  new DialogInterface.OnClickListener() {
+                    .setItems(R.array.transaction_reminders,  new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             ((AddTransactionActivity) getActivity()).onReminderSet(which);
                         }

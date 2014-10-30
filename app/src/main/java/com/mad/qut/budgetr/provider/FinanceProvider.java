@@ -8,10 +8,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.mad.qut.budgetr.provider.FinanceContract.*;
 import com.mad.qut.budgetr.provider.FinanceDatabase.*;
+import com.mad.qut.budgetr.utils.DateUtils;
 import com.mad.qut.budgetr.utils.SelectionBuilder;
 
 public class FinanceProvider extends ContentProvider {
@@ -40,10 +40,6 @@ public class FinanceProvider extends ContentProvider {
     public FinanceProvider() {
     }
 
-    /**
-     * Build and return a {@link UriMatcher} that catches all {@link Uri}
-     * variations supported by this {@link ContentProvider}.
-     */
     private static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = FinanceContract.CONTENT_AUTHORITY;
@@ -79,7 +75,6 @@ public class FinanceProvider extends ContentProvider {
         mOpenHelper = new FinanceDatabase(getContext());
     }
 
-    /** {@inheritDoc} */
     @Override
     public String getType(Uri uri) {
         final int match = sUriMatcher.match(uri);
@@ -112,7 +107,6 @@ public class FinanceProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         if (uri == FinanceContract.BASE_CONTENT_URI) {
-            // Handle whole database deletes (e.g. when signing out)
             deleteDatabase();
             notifyChange(uri);
             return 1;
@@ -213,11 +207,6 @@ public class FinanceProvider extends ContentProvider {
         return retVal;
     }
 
-    /**
-     * Build a simple {@link SelectionBuilder} to match the requested
-     * {@link Uri}. This is usually enough to support {@link #insert},
-     * {@link #update}, and {@link #delete} operations.
-     */
     private SelectionBuilder buildSimpleSelection(Uri uri) {
         final SelectionBuilder builder = new SelectionBuilder();
         final int match = sUriMatcher.match(uri);
@@ -261,47 +250,41 @@ public class FinanceProvider extends ContentProvider {
         }
     }
 
-    /**
-     * Build an advanced {@link SelectionBuilder} to match the requested
-     * {@link Uri}. This is usually only used by {@link #query}, since it
-     * performs table joins useful for {@link Cursor} data.
-     */
     private SelectionBuilder buildExpandedSelection(Uri uri, int match) {
         final SelectionBuilder builder = new SelectionBuilder();
         switch (match) {
             case TRANSACTIONS: {
-                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES)
                         .mapToTable(Transactions._ID, Tables.TRANSACTIONS)
-                        .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
-                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS);
+                        .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS);
             }
             case TRANSACTIONS_ID: {
                 final String transactionId = Transactions.getTransactionId(uri);
-                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES)
                         .mapToTable(Transactions._ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
-                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
                         .where(Tables.TRANSACTIONS + "." + Transactions._ID + "=?", transactionId);
             }
             case TRANSACTIONS_BY_CATEGORIES: {
-                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                long currentDate = DateUtils.getCurrentTimeStamp() * 1000;
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES)
                         .mapToTable(Tables.TRANSACTIONS + "." + Transactions._ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
-                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
+                        .where(Transactions.TRANSACTION_DATE + "<=?", currentDate+"")
                         .groupBy(Tables.TRANSACTIONS + "." + Transactions.CATEGORY_ID);
             }
             case TRANSACTIONS_BY_DAYS: {
-                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES)
+                long currentDate = DateUtils.getCurrentTimeStamp() * 1000;
+                return builder.table(Tables.TRANSACTIONS_JOIN_CATEGORIES)
                         .mapToTable(Tables.TRANSACTIONS + "." + Transactions._ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
-                        .mapToTable(Transactions.CURRENCY_ID, Tables.TRANSACTIONS)
+                        .where(Transactions.TRANSACTION_DATE + "<=?", currentDate+"")
                         .groupBy("strftime('%d', " + Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime'), " + Transactions.TRANSACTION_TYPE);
             }
             case BUDGETS: {
-                return builder.table(Tables.BUDGETS_JOIN_CATEGORIES_CURRENCIES)
+                return builder.table(Tables.BUDGETS_JOIN_CATEGORIES)
                         .mapToTable(Budgets._ID, Tables.BUDGETS)
-                        .mapToTable(Budgets.CATEGORY_ID, Tables.BUDGETS)
-                        .mapToTable(Budgets.CURRENCY_ID, Tables.BUDGETS);
+                        .mapToTable(Budgets.CATEGORY_ID, Tables.BUDGETS);
             }
             case BUDGETS_ID: {
                 final String budgetId = Budgets.getBudgetId(uri);
@@ -338,10 +321,6 @@ public class FinanceProvider extends ContentProvider {
     }
 
     private void notifyChange(Uri uri) {
-        // We only notify changes if the caller is not the sync adapter.
-        // The sync adapter has the responsibility of notifying changes (it can do so
-        // more intelligently than we can -- for example, doing it only once at the end
-        // of the sync instead of issuing thousands of notifications for each record).
         if (!FinanceContract.hasCallerIsSyncAdapterParameter(uri)) {
             Context context = getContext();
             context.getContentResolver().notifyChange(uri, null);

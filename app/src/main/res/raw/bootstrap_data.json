@@ -73,9 +73,24 @@
             "symbol": "€"
         },
         {
+            "id": "gbp",
+            "name": "British Pound",
+            "symbol": "£"
+        },
+        {
             "id": "usd",
             "name": "US Dollar",
             "symbol": "$"
+        },
+        {
+            "id": "cad",
+            "name": "Canadian Dollar",
+            "symbol": "C$"
+        },
+        {
+            "id": "nzd",
+            "name": "New Zealand Dollar",
+            "symbol": "NZ$"
         }
     ],
     "transactions": [

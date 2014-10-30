@@ -24,6 +24,15 @@ public class ImageUtils {
 
     private static final String TAG = ImageUtils.class.getSimpleName();
 
+    /**
+     * Compute intersection of two lines L1 and L2.
+     *
+     * @param l1 L1 Point 1
+     * @param l2 L1 Point 2
+     * @param l3 L2 Point 1
+     * @param l4 L2 Point 2
+     * @return Intersection point
+     */
     private static Point computeIntersect(Point l1, Point l2, Point l3, Point l4) {
         float d = (float) (((l1.x - l2.x) * (l3.y - l4.y)) - ((l1.y - l2.y) * (l3.x - l4.x)));
         if (d != 0) {
@@ -35,24 +44,49 @@ public class ImageUtils {
         return new Point(-1, -1);
     }
 
+    /**
+     * Convert image to grayscale.
+     *
+     * @param image Image
+     * @return Grayscaled image
+     */
     public static Mat toGrayScale(Mat image) {
         Mat gray = new Mat();
         Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
         return gray;
     }
 
+    /**
+     * Resize image.
+     *
+     * @param image Image
+     * @param factor Factor for resizing
+     * @return Resized image
+     */
     public static Mat resize(Mat image, int factor) {
         Mat resized = new Mat();
         Imgproc.resize(image, resized, new Size(image.cols()/factor, image.rows()/factor));
         return resized;
     }
 
+    /**
+     * Blur image using gaussian blur.
+     *
+     * @param image Image
+     * @return Blurred image
+     */
     public static Mat gaussianBlur(Mat image) {
         Mat blurred = new Mat();
         Imgproc.GaussianBlur(image, blurred, new Size(3, 3), 0);
         return blurred;
     }
 
+    /**
+     * Find contour lines in an image.
+     *
+     * @param image Image
+     * @return List of contour lines
+     */
     public static List<MatOfPoint> findContourLines(Mat image) {
         Mat processed = toGrayScale(image);
         processed = gaussianBlur(processed);
@@ -63,6 +97,12 @@ public class ImageUtils {
         return contours;
     }
 
+    /**
+     * Find contour line with max area in a list of contour lines.
+     *
+     * @param contours List of contour lines
+     * @return Idx of best contour line
+     */
     public static int findBestContourLine(List<MatOfPoint> contours) {
         double maxArea = 0;
         int bestContour = 0;
@@ -76,6 +116,14 @@ public class ImageUtils {
         return bestContour;
     }
 
+    /**
+     * Create a mask for an image, based on a contour line.
+     *
+     * @param image Image
+     * @param contours List of contour lines
+     * @param i Idx of the relevant contour line
+     * @return Mask
+     */
     public static Mat getMask(Mat image, List<MatOfPoint> contours, int i) {
         Mat mask = new Mat(new Size(image.cols(), image.rows()), CvType.CV_8UC1);
         mask.setTo(new Scalar(0.0));
@@ -84,6 +132,14 @@ public class ImageUtils {
         return mask;
     }
 
+    /**
+     * Mask an image, based on a contour line.
+     *
+     * @param image Image
+     * @param contours List of contour lines
+     * @param i Idx of the relevant contour line
+     * @return Masked image
+     */
     public static Mat mask(Mat image, List<MatOfPoint> contours, int i) {
         Mat masked = new Mat();
         Mat mask = getMask(image, contours, i);
@@ -91,6 +147,13 @@ public class ImageUtils {
         return image;
     }
 
+    /**
+     * Approximate a contour line.
+     *
+     * @param contours List of contour lines
+     * @param i Idx of the relevant contour line
+     * @return Array of points of the approximated polygon.
+     */
     public static Point[] approxContour(List<MatOfPoint> contours, int i) {
         MatOfPoint2f approxCurve = new MatOfPoint2f();
         MatOfPoint2f contour2f = new MatOfPoint2f(contours.get(i).toArray());
@@ -99,10 +162,23 @@ public class ImageUtils {
         return approxCurve.toArray();
     }
 
+    /**
+     * Get the minimal rectangle around a polygon.
+     *
+     * @param points Polygon
+     * @return Rotated Rectangle
+     */
     public static RotatedRect getMinAreaRect(MatOfPoint2f points) {
         return Imgproc.minAreaRect(points);
     }
 
+    /**
+     * Find approximate corners in a set of points.
+     *
+     * @param image Image
+     * @param points Set of points
+     * @return List of 4 Points (corners)
+     */
     public static List<Point> findCorners(Mat image, Point[] points) {
         List<Point> corners = new ArrayList<Point>();
         Point tl = new Point(image.cols(), image.rows());
@@ -131,10 +207,25 @@ public class ImageUtils {
         return corners;
     }
 
+    /**
+     * Calculate distance between two points a and b.
+     *
+     * @param p1 Point a
+     * @param p2 Point b
+     * @return distance
+     */
     public static double distance(Point p1, Point p2) {
         return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     }
 
+    /**
+     * Transform image in order to correct perspective.
+     *
+     * @param image Image
+     * @param src Corner points in image
+     * @param s Target size
+     * @return Transformed image
+     */
     public static Mat transform(Mat image, Mat src, Size s) {
         Mat result = new Mat(s, image.type());
         result.setTo(new Scalar(0.0));
@@ -152,13 +243,26 @@ public class ImageUtils {
         return result;
     }
 
+    /**
+     * Apply otsu and binary inverse threshold to an image.
+     *
+     * @param image Image
+     * @return Processed image
+     */
     public static Mat thresholdOtsuInv(Mat image) {
         Mat thresh = new Mat();
         //Imgproc.adaptiveThreshold(image, thresh, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 5, 4);
+        // threshold using otsu and binary inverse
         Imgproc.threshold(image, thresh, -1, 255, Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);
         return thresh;
     }
 
+    /**
+     * Divide image by its morphological closing.
+     *
+     * @param image Image
+     * @return Divided image
+     */
     public static Mat divide(Mat image) {
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(9,9));
         Mat temp = new Mat();
@@ -172,16 +276,31 @@ public class ImageUtils {
         return closed;
     }
 
+    /**
+     * Image processing method. It is run before the text recognition.
+     * Method aims to crop out the receipt in the image and correct perspective.
+     * Furthermore it tries to clean the image to make the text better readable.
+     *
+     * @param bmpOriginal Image to be processed
+     * @return Processed image
+     */
     public static Bitmap process(Bitmap bmpOriginal) {
         Mat imageMat = new Mat();
+        // convert bmp to mat
         Utils.bitmapToMat(bmpOriginal, imageMat);
 
+        // resize image (1/4 of original size)
         Mat imResized = resize(imageMat, 4);
+        // find contour lines of the receipt
         List<MatOfPoint> contours = findContourLines(imResized);
+        // contour line with biggest area is probably the receipt
         int i = findBestContourLine(contours);
+        // approximate contour lines
         Point[] contourPoints = approxContour(contours, i);
+        // find corners of the resulting shape
         List<Point> corners = findCorners(imResized, contourPoints);
 
+        // adjust corners in order to account for initial resize
         ListIterator<Point> iterator = corners.listIterator();
         while (iterator.hasNext()) {
             Point p = iterator.next();
@@ -189,25 +308,30 @@ public class ImageUtils {
             p.y = p.y*4;
         }
 
+        // new image should only consist of receipt, therefore width & height from receipt
         int targetWidth = (int) distance(corners.get(0), corners.get(1));
         int targetHeight = (int) distance(corners.get(0), corners.get(3));
+        // transform the original image in order to correct perspective and crop out receipt
         Mat result = transform(imageMat, Converters.vector_Point2f_to_Mat(corners), new Size(targetWidth, targetHeight));
+        // receipt image to gray
         result = toGrayScale(result);
+        // divide receipt image by its morphological closing
         result = divide(result);
+        // blur the image
         result = gaussianBlur(result);
-        //Core.addWeighted(result, 1.5, blur, -0.5, 0, result);
+        // apply otsu threshold
         result = thresholdOtsuInv(result);
 
+        // we got our processed image now convert back to bmp
         Bitmap processedBmp = Bitmap.createBitmap(result.width(), result.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(result, processedBmp);
-
-        Log.d(TAG, processedBmp.getWidth() + "x" + processedBmp.getHeight());
 
         return processedBmp;
     }
 
 }
 
+// Old method for finding contours. Ignore.
 /*Mat canny = new Mat();
         Imgproc.Canny(mask, canny, 100, 100, 3, true);
         Mat lines = new Mat();

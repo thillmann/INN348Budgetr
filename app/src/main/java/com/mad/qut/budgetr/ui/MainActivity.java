@@ -3,25 +3,19 @@ package com.mad.qut.budgetr.ui;
 import java.util.Locale;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.mad.qut.budgetr.R;
-import com.mad.qut.budgetr.ui.widget.PeriodPickerFragment;
 
 
 public class MainActivity extends BaseActivity {
@@ -110,16 +104,12 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             Intent iSettings = new Intent();
@@ -129,11 +119,10 @@ public class MainActivity extends BaseActivity {
         }
         if (id == R.id.action_about) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.about_title);
-            builder.setMessage(R.string.about_message);
+            builder.setTitle(R.string.dialog_about_title);
+            builder.setMessage(R.string.dialog_about_message);
             builder.setPositiveButton(R.string.okay, null);
             AlertDialog dialog = builder.create();
-
             dialog.show();
         }
         if (id == R.id.action_receipt_scanner) {

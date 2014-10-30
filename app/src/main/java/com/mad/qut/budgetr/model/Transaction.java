@@ -15,10 +15,9 @@ public class Transaction implements Comparable<Transaction>  {
     public long date;
     public String type;
     public double amount;
-    public String currency;
     public String category;
-    public String repeat;
-    public String reminder;
+    public int repeat;
+    public int reminder;
 
     @Override
     public int compareTo(Transaction another) {

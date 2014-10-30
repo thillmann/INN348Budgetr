@@ -36,6 +36,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
     public View mEmptyView;
     public Context mContext;
 
+    private FloatingActionButton btAdd;
     private BudgetCursorAdapter mListAdapter;
 
     @Override
@@ -43,23 +44,26 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         View root = inflater.inflate(R.layout.fragment_budgets_list, container, false);
         mListView = (ListView) root.findViewById(R.id.budgets_list_view);
         mEmptyView = root.findViewById(android.R.id.empty);
-        FloatingActionButton addButton = (FloatingActionButton) root.findViewById(R.id.add);
-        addButton.attachToListView(mListView);
+        btAdd = (FloatingActionButton) root.findViewById(R.id.add);
+        btAdd.attachToListView(mListView);
         displayListView();
         return root;
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        btAdd.show();
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        CursorLoader cursorLoader = new CursorLoader(getActivity(),
+        return new CursorLoader(getActivity(),
                 FinanceContract.Budgets.CONTENT_URI, BudgetQuery.PROJECTION, null, null, FinanceContract.Budgets.DEFAULT_SORT);
-        return cursorLoader;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        // Swap the new cursor in.  (The framework will take care of closing the
-        // old cursor once we return.)
         boolean isEmpty = data.getCount() == 0;
         mListAdapter.swapCursor(data);
         mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
@@ -67,17 +71,12 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        // This is called when the last Cursor provided to onLoadFinished()
-        // above is about to be closed.  We need to make sure we are no
-        // longer using it.
         mListAdapter.swapCursor(null);
         mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private void displayListView() {
         // TODO: Lazy List Load
-        // TODO: Delete with long click
-        // TODO: Detail View
         mListAdapter = new BudgetCursorAdapter(getActivity(), null, 0);
         mListView.setAdapter(mListAdapter);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -93,11 +92,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
                 category.name = cursor.getString(BudgetQuery.CATEGORY_NAME);
                 iBudget.putExtra("category", category.toJSON());
 
-                Currency currency = new Currency();
-                currency.id = cursor.getString(BudgetQuery.CURRENCY_ID);
-                currency.symbol = cursor.getString(BudgetQuery.CURRENCY_SYMBOL);
-                iBudget.putExtra("currency", currency.toJSON());
-
                 Budget budget = new Budget();
                 budget.id = cursor.getString(BudgetQuery.BUDGET_ID);
                 budget.amount = cursor.getDouble(BudgetQuery.AMOUNT);
@@ -105,7 +99,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
                 budget.type = cursor.getInt(BudgetQuery.TYPE);
                 budget.startDate = cursor.getLong(BudgetQuery.START_DATE);
                 budget.category = category.id;
-                budget.currency = currency.id;
                 iBudget.putExtra("budget", budget.toJSON());
 
                 Uri updateUri = FinanceContract.Budgets.buildBudgetUri(l+"");
@@ -128,9 +121,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
                 FinanceContract.Budgets.BUDGET_TYPE,
                 FinanceContract.Budgets.BUDGET_START_DATE,
                 FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Categories.CATEGORY_NAME,
-                FinanceContract.Currencies.CURRENCY_ID,
-                FinanceContract.Currencies.CURRENCY_SYMBOL,
+                FinanceContract.Categories.CATEGORY_NAME
         };
 
         int _ID             = 0;
@@ -141,8 +132,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
         int START_DATE      = 5;
         int CATEGORY_ID     = 6;
         int CATEGORY_NAME   = 7;
-        int CURRENCY_ID     = 8;
-        int CURRENCY_SYMBOL = 9;
     }
 
     private interface TransactionQuery {
@@ -180,7 +169,6 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
             b.type = cursor.getInt(BudgetQuery.TYPE);
             b.startDate = cursor.getLong(BudgetQuery.START_DATE);
             b.category = cursor.getString(BudgetQuery.CATEGORY_ID);
-            b.currency = cursor.getString(BudgetQuery.CURRENCY_ID);
 
             ImageView mCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
             TextView mName = (TextView) view.findViewById(R.id.name);
@@ -237,6 +225,8 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
                 double percentLeft = mBudget.getPercentLeft(amountSpent);
                 if (percentLeft < 25) {
                     mTextView.setTextColor(getResources().getColor(R.color.expense));
+                } else {
+                    mTextView.setTextColor(getResources().getColor(R.color.body_text_1));
                 }
                 mTextView.setText(percentLeft + "%");
             }

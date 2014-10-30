@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+/**
+ * Various methods to access the preferences.
+ */
 public class PrefUtils {
 
     private static final String TAG = PrefUtils.class.getSimpleName();
@@ -11,7 +14,8 @@ public class PrefUtils {
     public static final String PREF_PASSWORD_ENABLED = "pref_password_enabled";
     public static final String PREF_PASSWORD = "pref_password";
     public static final String PREF_CURRENCY = "pref_currency";
-    public static final String PREF_CUERRENCY_SYMBOL = "pref_currency_symbol";
+    public static final String PREF_CURRENCY_SYMBOL = "pref_currency_symbol";
+    public static final String PREF_CURRENCY_NAME = "pref_currency_name";
     public static final String PREF_DATA_BOOTSTRAP_DONE = "pref_data_bootstrap_done";
     public static final String PREF_DELETE_TRANSACTIONS = "pref_delete_transactions";
     public static final String PREF_DELETE_BUDGETS = "pref_delete_budgets";
@@ -49,19 +53,34 @@ public class PrefUtils {
         sp.edit().putString(PREF_PASSWORD, password).apply();
     }
 
-    public static String getCurrency(final Context context) {
-        SharedPreferences sp = getSharedPreferences(context);
-        return sp.getString(PREF_CURRENCY, "");
-    }
-
     public static boolean isCurrencySet(final Context context) {
         SharedPreferences sp = getSharedPreferences(context);
         return !sp.getString(PREF_CURRENCY, "").equals("");
     }
 
-    public static void setCurrency(final Context context, String currency) {
+    public static String getCurrency(final Context context) {
         SharedPreferences sp = getSharedPreferences(context);
-        sp.edit().putString(PREF_CURRENCY, currency).apply();
+        return sp.getString(PREF_CURRENCY, "");
+    }
+
+    public static String getCurrencySymbol(final Context context) {
+        SharedPreferences sp = getSharedPreferences(context);
+        return sp.getString(PREF_CURRENCY_SYMBOL, "");
+    }
+
+    public static void setCurrencySymbol(final Context context, String symbol) {
+        SharedPreferences sp = getSharedPreferences(context);
+        sp.edit().putString(PREF_CURRENCY_SYMBOL, symbol).apply();
+    }
+
+    public static String getCurrencyName(final Context context) {
+        SharedPreferences sp = getSharedPreferences(context);
+        return sp.getString(PREF_CURRENCY_NAME, "");
+    }
+
+    public static void setCurrencyName(final Context context, String name) {
+        SharedPreferences sp = getSharedPreferences(context);
+        sp.edit().putString(PREF_CURRENCY_NAME, name).apply();
     }
 
     public static void registerOnSharedPreferenceChangeListener(final Context context,

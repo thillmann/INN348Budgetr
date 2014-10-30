@@ -5,41 +5,23 @@ import android.util.SparseArray;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Provides static methods for creating {@code List} instances easily, and other
- * utility methods for working with lists.
- */
 public class Lists {
 
     /**
-     * Creates an empty {@code ArrayList} instance.
+     * Creates an empty ArrayList.
      *
-     * <p><b>Note:</b> if you only need an <i>immutable</i> empty List, use
-     * {@link java.util.Collections#emptyList} instead.
-     *
-     * @return a newly-created, initially-empty {@code ArrayList}
+     * @return ArrayList
      */
     public static <E> ArrayList<E> newArrayList() {
         return new ArrayList<E>();
     }
 
     /**
-     * Creates a resizable {@code ArrayList} instance containing the given
+     * Creates a resizable ArrayList containing the given
      * elements.
      *
-     * <p><b>Note:</b> due to a bug in javac 1.5.0_06, we cannot support the
-     * following:
-     *
-     * <p>{@code List<Base> list = Lists.newArrayList(sub1, sub2);}
-     *
-     * <p>where {@code sub1} and {@code sub2} are references to subtypes of
-     * {@code Base}, not of {@code Base} itself. To get around this, you must
-     * use:
-     *
-     * <p>{@code List<Base> list = Lists.<Base>newArrayList(sub1, sub2);}
-     *
-     * @param elements the elements that the list should contain, in order
-     * @return a newly-created {@code ArrayList} containing those elements
+     * @param elements Elements that should be included
+     * @return ArrayList containting the elements
      */
     public static <E> ArrayList<E> newArrayList(E... elements) {
         int capacity = (elements.length * 110) / 100 + 5;
@@ -48,7 +30,12 @@ public class Lists {
         return list;
     }
 
-    /** Clones a SparseArray. */
+    /**
+     * Clones a SparseArray.
+     *
+     * @param orig SparseArray
+     * @return Cloned SparseArray
+     */
     public static <E> SparseArray<E> cloneSparseArray(SparseArray<E> orig) {
         SparseArray<E> result = new SparseArray<E>();
         for (int i = 0; i < orig.size(); i++) {

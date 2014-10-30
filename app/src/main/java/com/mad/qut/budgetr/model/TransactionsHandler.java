@@ -36,7 +36,6 @@ public class TransactionsHandler extends JSONHandler {
             builder.withValue(FinanceContract.Transactions.TRANSACTION_REMINDER, transaction.reminder);
             builder.withValue(FinanceContract.Transactions.TRANSACTION_REPEAT, transaction.repeat);
             builder.withValue(FinanceContract.Transactions.CATEGORY_ID, transaction.category);
-            builder.withValue(FinanceContract.Transactions.CURRENCY_ID, transaction.currency);
             list.add(builder.build());
         }
     }

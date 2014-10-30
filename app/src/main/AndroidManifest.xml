@@ -93,6 +93,21 @@
             android:name=".service.ScanReceiptService"
             android:exported="false" />
 
+        <service
+            android:name=".service.ReminderService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver
+            android:enabled="true"
+            android:name=".receiver.ServiceAutoLauncher"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.HOME" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

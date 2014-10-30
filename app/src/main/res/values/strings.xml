@@ -3,10 +3,17 @@
 
     <string name="app_name">Budgetr</string>
 
+    <!-- Activities -->
+    <string name="title_activity_add_budget">Add Budget</string>
+    <string name="title_activity_edit_budget">Edit Budget</string>
+    <string name="title_activity_budget_detail">Budget</string>
+    <string name="title_activity_add_transaction">Add Transaction</string>
+    <string name="title_activity_edit_transaction">Edit Transaction</string>
+    <string name="title_activity_select_category">Select Category</string>
+
     <!-- Menu -->
     <string name="action_settings">Settings</string>
     <string name="action_add">Add Transaction</string>
-    <string name="action_accounts">Accounts</string>
     <string name="action_submit">Submit</string>
 
     <!-- Tabs -->
@@ -24,19 +31,43 @@
     <string name="pref_title_set_password">Set Password</string>
     <string name="pref_title_change_password">Change Password</string>
     <string name="pref_summary_change_password">Description</string>
+    <string name="pref_title_delete_transactions">Delete all transactions</string>
+    <string name="pref_title_delete_budgets">Delete all budgets</string>
+    <string name="pref_title_set_currency">Set Currency</string>
+    <string name="pref_title_change_currency">Change Currency</string>
 
     <!-- Dialogs -->
     <string name="dialog_enter_password_title">Enter your password</string>
     <string name="dialog_enter_password_message">Message</string>
     <string name="dialog_pick_repeat">Repeating</string>
     <string name="dialog_pick_reminder">Reminder</string>
+    <string name="dialog_delete_budgets_title">Delete all budgets</string>
+    <string name="dialog_delete_budgets_message">Do you really want to delete all budgets?</string>
+    <string name="dialog_delete_transactions_title">Delete all transactions</string>
+    <string name="dialog_delete_transactions_message">Do you really want to delete all transactions?</string>
+    <string name="dialog_about_title">About</string>
+    <string name="dialog_about_message">Budgetr was created by Timo Hillmann.</string>
 
     <!-- Toasts -->
     <string name="toast_password_failed">You have entered the wrong password!</string>
-    <string name="title_activity_my">MyActivity</string>
-    <string name="title_section1">Section 1</string>
-    <string name="title_section2">Section 2</string>
-    <string name="title_section3">Section 3</string>
+    <string name="toast_no_category">Please select a category</string>
+    <string name="toast_no_amount">Please enter an amount</string>
+    <string name="toast_no_name">Please enter a name</string>
+    <string name="toast_budgets_deleted">Budgets deleted.</string>
+    <string name="toast_transactions_deleted">Transactions deleted.</string>
+    <string name="toast_scan">Scanning in progress.</string>
+
+    <!-- Notifications -->
+    <string name="notification_title_scan">Receipt Scan</string>
+    <string name="notification_message_scan_failed">Scanning failed. Please try again.</string>
+    <string name="notification_message_scan_progress">Scanning in progress.</string>
+    <string name="notification_message_scan_completed">Transaction successfully created.</string>
+    <string name="notification_title_transaction">Upcoming Transaction</string>
+    <plurals name="notification_message_transaction">
+        <item quantity="other">A transaction to the amount of %s is coming up.</item>
+    </plurals>
+
+    <!-- Other -->
     <string name="label_amount">Amount</string>
     <string name="hint_amount">Amount</string>
     <string name="button_edit_transaction">Submit Changes</string>
@@ -48,94 +79,20 @@
     <string name="label_description">Description</string>
     <string name="button_date">Set Date</string>
     <string name="never">Never</string>
-    <string name="title_activity_accounts">AccountsActivity</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_add_budget">Add Budget</string>
     <string name="receipt_scanner">Receipt Scanner</string>
-    <string name="no_category">Please select a category</string>
-    <string name="no_amount">Please enter an amount</string>
-
-    <string-array name="currencies">
-        <item>Euro</item>
-        <item>US Dollar</item>
-        <item>Australian Dollar</item>
-        <item>British Pound</item>
-    </string-array>
-    <string-array name="currencies_alias">
-        <item>EUR</item>
-        <item>USD</item>
-        <item>AUD</item>
-        <item>GBP</item>
-    </string-array>
-
-    <string-array name="repeats">
-        <item>Never</item>
-        <item>Every day</item>
-        <item>Every week</item>
-        <item>Every two weeks</item>
-        <item>Every month</item>
-        <item>Every year</item>
-    </string-array>
-    <string-array name="repeats_alias">
-        <item>none</item>
-        <item>daily</item>
-        <item>weekly</item>
-        <item>biweekly</item>
-        <item>monthly</item>
-        <item>yearly</item>
-    </string-array>
-
-    <string-array name="reminders">
-        <item>Never</item>
-        <item>1 day before</item>
-        <item>2 days before</item>
-        <item>3 days before</item>
-        <item>4 days before</item>
-        <item>5 days before</item>
-        <item>6 days before</item>
-        <item>7 days before</item>
-    </string-array>
-    <string-array name="reminders_alias">
-        <item>none</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-    </string-array>
-
-    <string-array name="budget_types">
-        <item>Weekly budget</item>
-        <item>Biweekly budget</item>
-        <item>Monthly budget</item>
-        <item>Yearly budget</item>
-        <item>Endless budget</item>
-    </string-array>
-
-    <string name="title_activity_add_budget">Add Budget</string>
-    <string name="title_activity_edit_budget">Edit Budget</string>
     <string name="no_transactions">No transactions found.</string>
     <string name="label_name">Name</string>
-    <string name="no_budgets">No budgets.</string>
+    <string name="no_budgets">No budgets found.</string>
     <string name="label_type">Type</string>
     <string name="label_start_date">Periods begins</string>
     <string name="label_target">Budget target</string>
     <string name="expenses_by_category">Expenses by Category</string>
     <string name="overview">Overview</string>
-    <string name="no_name">Please enter a name</string>
     <string name="expenses">Expenses</string>
     <string name="cancel">Cancel</string>
     <string name="set">Set</string>
     <string name="okay">OK</string>
-    <string name="about_title">About</string>
-    <string name="about_message">Budgetr was created by Timo Hillmann.</string>
-    <string name="title_activity_add_transaction">Add Transaction</string>
-    <string name="title_activity_edit_transaction">Edit Transaction</string>
-    <string name="title_activity_select_category">Select Category</string>
     <string name="amount_left">Left</string>
-    <string name="title_activity_budget_detail">Budget</string>
     <string name="action_edit">Edit</string>
     <string name="amount_spent">Spent</string>
 
@@ -154,5 +111,33 @@
         <item quantity="one">1 transaction</item>
         <item quantity="other">%d transactions</item>
     </plurals>
+
+    <string-array name="transaction_repeats">
+        <item>Never</item>
+        <item>Every day</item>
+        <item>Every week</item>
+        <item>Every two weeks</item>
+        <item>Every month</item>
+        <item>Every year</item>
+    </string-array>
+
+    <string-array name="transaction_reminders">
+        <item>Never</item>
+        <item>1 day before</item>
+        <item>2 days before</item>
+        <item>3 days before</item>
+        <item>4 days before</item>
+        <item>5 days before</item>
+        <item>6 days before</item>
+        <item>7 days before</item>
+    </string-array>
+
+    <string-array name="budget_types">
+        <item>Weekly budget</item>
+        <item>Biweekly budget</item>
+        <item>Monthly budget</item>
+        <item>Yearly budget</item>
+        <item>Endless budget</item>
+    </string-array>
 
 </resources>

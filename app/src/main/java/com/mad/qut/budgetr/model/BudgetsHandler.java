@@ -36,7 +36,6 @@ public class BudgetsHandler extends JSONHandler {
             builder.withValue(FinanceContract.Budgets.BUDGET_TYPE, budget.type);
             builder.withValue(FinanceContract.Budgets.BUDGET_START_DATE, budget.startDate);
             builder.withValue(FinanceContract.Budgets.CATEGORY_ID, budget.category);
-            builder.withValue(FinanceContract.Budgets.CURRENCY_ID, budget.currency);
             list.add(builder.build());
         }
     }

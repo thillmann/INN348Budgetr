@@ -125,6 +125,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
         tvIncomeValue.setText(NumberUtils.getFormattedCurrency(0));
 
         mExpenseChart.setVisibility(View.GONE);
+        mExpenseChart.setCenterText("");
 
         tvExpenses.setText(getResources().getQuantityString(R.plurals.number_transactions, 0, 0));
 
@@ -414,16 +415,13 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
                 "SUM(" + FinanceContract.Transactions.TRANSACTION_AMOUNT + ")",
                 FinanceContract.Categories.CATEGORY_NAME,
                 FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Currencies.CURRENCY_SYMBOL,
-                FinanceContract.Currencies.CURRENCY_ID,
                 "COUNT(*)"
         };
 
         int TOTAL_AMOUNT = 0;
         int CATEGORY_NAME = 1;
         int CATEGORY_ID = 2;
-        int CURRENCY_ID = 4;
-        int COUNT = 5;
+        int COUNT = 3;
     }
 
 }

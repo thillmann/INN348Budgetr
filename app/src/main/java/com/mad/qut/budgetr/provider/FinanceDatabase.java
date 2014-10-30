@@ -14,7 +14,7 @@ public class FinanceDatabase extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "finance.db";
 
-    private static final int CUR_DATABASE_VERSION = 106;
+    private static final int CUR_DATABASE_VERSION = 109;
 
     private final Context mContext;
 
@@ -24,13 +24,11 @@ public class FinanceDatabase extends SQLiteOpenHelper {
         String BUDGETS      = "budgets";
         String CURRENCIES   = "currencies";
 
-        String TRANSACTIONS_JOIN_CATEGORIES_CURRENCIES = "transactions "
-                + "LEFT OUTER JOIN categories ON transactions.category_id=categories.category_id "
-                + "LEFT OUTER JOIN currencies ON transactions.currency_id=currencies.currency_id";
+        String TRANSACTIONS_JOIN_CATEGORIES = "transactions "
+                + "LEFT OUTER JOIN categories ON transactions.category_id=categories.category_id ";
 
-        String BUDGETS_JOIN_CATEGORIES_CURRENCIES = "budgets "
-                + "LEFT OUTER JOIN categories ON budgets.category_id=categories.category_id "
-                + "LEFT OUTER JOIN currencies ON budgets.currency_id=currencies.currency_id";
+        String BUDGETS_JOIN_CATEGORIES = "budgets "
+                + "LEFT OUTER JOIN categories ON budgets.category_id=categories.category_id ";
 
         String TRANSACTIONS_JOIN_BUDGETS = "transactions "
                 + "LEFT OUTER JOIN budgets ON transactions.category_id=budgets.category_id";
@@ -54,10 +52,9 @@ public class FinanceDatabase extends SQLiteOpenHelper {
                 + TransactionsColumns.TRANSACTION_DATE + " INTEGER NOT NULL,"
                 + TransactionsColumns.TRANSACTION_TYPE + " TEXT,"
                 + TransactionsColumns.TRANSACTION_AMOUNT + " DOUBLE NOT NULL DEFAULT 0,"
-                + TransactionsColumns.TRANSACTION_REPEAT + " TEXT,"
-                + TransactionsColumns.TRANSACTION_REMINDER + " TEXT,"
+                + TransactionsColumns.TRANSACTION_REPEAT + " INTEGER NOT NULL,"
+                + TransactionsColumns.TRANSACTION_REMINDER + " INTEGER NOT NULL,"
                 + Transactions.CATEGORY_ID + " TEXT " + References.CATEGORY_ID + ","
-                + Transactions.CURRENCY_ID + " TEXT " + References.CURRENCY_ID + ","
                 + "UNIQUE (" + TransactionsColumns.TRANSACTION_ID + ") ON CONFLICT REPLACE)");
 
         db.execSQL("CREATE TABLE " + Tables.BUDGETS + " ("
@@ -68,7 +65,6 @@ public class FinanceDatabase extends SQLiteOpenHelper {
                 + BudgetsColumns.BUDGET_TYPE + " SMALLINT NOT NULL,"
                 + BudgetsColumns.BUDGET_START_DATE + " INTEGER NOT NULL DEFAULT -1,"
                 + Budgets.CATEGORY_ID + " TEXT " + References.CATEGORY_ID + ","
-                + Budgets.CURRENCY_ID + " TEXT " + References.CURRENCY_ID + ","
                 + "UNIQUE (" + BudgetsColumns.BUDGET_ID + ") ON CONFLICT REPLACE)");
 
         db.execSQL("CREATE TABLE " + Tables.CATEGORIES + " ("

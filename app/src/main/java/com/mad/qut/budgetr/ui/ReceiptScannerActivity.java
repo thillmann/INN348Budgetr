@@ -111,7 +111,7 @@ public class ReceiptScannerActivity extends Activity implements LoaderManager.Lo
                 mServiceIntent.putExtra(ScanReceiptService.EXTRA_IMAGE, mCurrentPhotoPath);
                 mServiceIntent.putExtra(ScanReceiptService.EXTRA_CATGEORY, view.getContentDescription().toString());
                 startService(mServiceIntent);
-                Toast.makeText(activity, "Scanning in progress.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, R.string.toast_scan, Toast.LENGTH_SHORT).show();
                 activity.finish();
             }
         });

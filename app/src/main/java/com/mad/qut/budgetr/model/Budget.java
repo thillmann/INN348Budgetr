@@ -21,7 +21,6 @@ public class Budget {
     public int type;
     public long startDate;
     public String category;
-    public String currency;
 
     public Budget() {
     }

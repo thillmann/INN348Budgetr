@@ -44,11 +44,11 @@
                 android:id="@+id/button_date"
                 android:text="@string/button_date"
                 android:drawableTop="@drawable/ic_today_black_24dp"
-                android:drawablePadding="8dp"
+                android:drawablePadding="4dp"
                 android:onClick="openDatePicker"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
                 style="@style/RaisedButtonStyle" />
 
             <Button
@@ -57,9 +57,9 @@
                 style="@style/RaisedButtonStyle"
                 android:onClick="openRepeatPicker"
                 android:drawableTop="@drawable/ic_history_black_24dp"
-                android:drawablePadding="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:drawablePadding="4dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1" />
 
             <Button
@@ -68,9 +68,10 @@
                 style="@style/RaisedButtonStyle"
                 android:onClick="openReminderPicker"
                 android:drawableTop="@drawable/ic_access_alarm_black_24dp"
-                android:drawablePadding="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:drawablePadding="4dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:enabled="false"
                 android:layout_weight="1" />
 
         </LinearLayout>

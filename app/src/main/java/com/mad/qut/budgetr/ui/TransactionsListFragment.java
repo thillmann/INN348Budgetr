@@ -101,20 +101,14 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
                 category.name = cursor.getString(TransactionQuery.CATEGORY_NAME);
                 iTransaction.putExtra("category", category.toJSON());
 
-                Currency currency = new Currency();
-                currency.id = cursor.getString(TransactionQuery.CURRENCY_ID);
-                currency.symbol = cursor.getString(TransactionQuery.CURRENCY_SYMBOL);
-                iTransaction.putExtra("currency", currency.toJSON());
-
                 Transaction transaction = new Transaction();
                 transaction.id = cursor.getString(TransactionQuery.TRANSACTION_ID);
                 transaction.amount = cursor.getDouble(TransactionQuery.AMOUNT);
                 transaction.date = cursor.getLong(TransactionQuery.DATE);
                 transaction.type = cursor.getString(TransactionQuery.TYPE);
                 transaction.category = category.id;
-                transaction.repeat = cursor.getString(TransactionQuery.REPEAT);
-                transaction.reminder = cursor.getString(TransactionQuery.REMINDER);
-                transaction.currency = currency.id;
+                transaction.repeat = cursor.getInt(TransactionQuery.REPEAT);
+                transaction.reminder = cursor.getInt(TransactionQuery.REMINDER);
                 iTransaction.putExtra("transaction", transaction.toJSON());
 
                 Uri updateUri = Uri.parse(FinanceContract.Transactions.CONTENT_URI + "/" + l);
@@ -138,9 +132,7 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
                 FinanceContract.Transactions.TRANSACTION_REPEAT,
                 FinanceContract.Transactions.TRANSACTION_REMINDER,
                 FinanceContract.Categories.CATEGORY_NAME,
-                FinanceContract.Categories.CATEGORY_ID,
-                FinanceContract.Currencies.CURRENCY_SYMBOL,
-                FinanceContract.Currencies.CURRENCY_ID
+                FinanceContract.Categories.CATEGORY_ID
         };
 
         int _ID = 0;
@@ -152,13 +144,13 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
         int REMINDER = 6;
         int CATEGORY_NAME = 7;
         int CATEGORY_ID = 8;
-        int CURRENCY_SYMBOL = 9;
-        int CURRENCY_ID = 10;
     }
 
     public class TransactionCursorAdapter extends CursorAdapter {
 
-        LayoutInflater mLayoutInflater;
+        private LayoutInflater mLayoutInflater;
+
+        private final long mCurrentDate = DateUtils.getCurrentTimeStamp() * 1000;
 
         public TransactionCursorAdapter(Context context, Cursor cursor, int flags) {
             super(context, cursor, flags);
@@ -172,26 +164,32 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            ImageView ivCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
+            TextView tvCategoryName = (TextView) view.findViewById(R.id.category_name);
+            TextView tvAmount = (TextView) view.findViewById(R.id.amount);
+            TextView tvDate = (TextView) view.findViewById(R.id.date);
 
-            ImageView mCategoryIcon = (ImageView) view.findViewById(R.id.category_icon);
-            TextView mCategoryName = (TextView) view.findViewById(R.id.category_name);
-            TextView mAmount = (TextView) view.findViewById(R.id.amount);
-            TextView mDate = (TextView) view.findViewById(R.id.date);
+            ivCategoryIcon.setImageResource(Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID), Category.ICON_SMALL));
 
-            mCategoryIcon.setImageResource(Category.getIcon(cursor.getString(TransactionQuery.CATEGORY_ID), Category.ICON_SMALL));
-
-            mCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
+            tvCategoryName.setText(cursor.getString(TransactionQuery.CATEGORY_NAME));
 
             double amount = cursor.getDouble(TransactionQuery.AMOUNT);
             if (cursor.getString(TransactionQuery.TYPE).equals(FinanceContract.Transactions.TRANSACTION_TYPE_INCOME)) {
-                mAmount.setTextColor(getResources().getColor(R.color.income));
+                tvAmount.setTextColor(getResources().getColor(R.color.income));
             } else {
-                mAmount.setTextColor(getResources().getColor(R.color.expense));
+                tvAmount.setTextColor(getResources().getColor(R.color.expense));
                 amount = -amount;
             }
-            mAmount.setText(NumberUtils.getFormattedCurrency(amount));
+            tvAmount.setText(NumberUtils.getFormattedCurrency(amount));
 
-            mDate.setText(DateUtils.getFormattedDate(cursor.getLong(TransactionQuery.DATE), "dd/MM/yyyy"));
+            long date = cursor.getLong(TransactionQuery.DATE);
+            tvDate.setText(DateUtils.getFormattedDate(date, "dd/MM/yyyy"));
+
+            if (mCurrentDate < date) {
+                view.setAlpha(0.5f);
+            } else {
+                view.setAlpha(1f);
+            }
         }
 
     }
