@@ -68,39 +68,6 @@ public class SelectionBuilder {
     }
 
     /**
-     * Append "where" clause to query (OR).
-     *
-     * @param selection
-     * @param selectionArgs
-     * @return builder
-     */
-    public SelectionBuilder where(boolean useOr, String selection, String... selectionArgs) {
-        if (TextUtils.isEmpty(selection)) {
-            if (selectionArgs != null && selectionArgs.length > 0) {
-                throw new IllegalArgumentException(
-                        "Valid selection required when including arguments=");
-            }
-
-            return this;
-        }
-
-        if (mSelection.length() > 0) {
-            if (useOr) {
-                mSelection.append(" OR ");
-            } else {
-                mSelection.append(" AND ");
-            }
-        }
-
-        mSelection.append("(").append(selection).append(")");
-        if (selectionArgs != null) {
-            Collections.addAll(mSelectionArgs, selectionArgs);
-        }
-
-        return this;
-    }
-
-    /**
      * Append "where ... is null" clause to query.
      *
      * @param isNull

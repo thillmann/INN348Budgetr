@@ -77,9 +77,14 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
         mButtonRepeating = (Button) findViewById(R.id.button_repeating);
         mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.repeat]);
+        if (mTransaction.repeat != FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+            mButtonDate.setEnabled(false);
+            mButtonRepeating.setEnabled(false);
+        }
         mButtonReminder = (Button) findViewById(R.id.button_reminder);
         mButtonReminder.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.reminder]);
-        if (mTransaction.reminder != FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+        if (mTransaction.reminder != FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER
+                || mTransaction.repeat != FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
             mButtonReminder.setEnabled(true);
         }
         Button mDelete = (Button) findViewById(R.id.delete);
@@ -120,7 +125,27 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
             // INSERT INTO DB
             mTransaction.amount = mAmountEdit.getCurrencyValue();
             mTransaction.category = mCategoriesGrid.getSelection();
-            getContentResolver().update(updateUri, mTransaction.create(), null, null);
+            if (mTransaction.repeat == FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+                getContentResolver().update(updateUri, mTransaction.create(), null, null);
+            } else {
+                String root = mTransaction.id;
+                if (mTransaction.root != null) {
+                    root = mTransaction.root;
+                }
+                SelectionBuilder builder = new SelectionBuilder();
+                builder.where(FinanceContract.Transactions.TRANSACTION_DATE + ">=?", mTransaction.date+"");
+                builder.where(FinanceContract.Transactions.TRANSACTION_ROOT + "=? OR "
+                        + FinanceContract.Transactions.TRANSACTION_ID + "=?", root, root);
+                ContentValues values = new ContentValues();
+                // Right now, we do not support full editing of repeating transactions.
+                // Editing is limited to amount, category, type and reminder.
+                values.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, mTransaction.amount);
+                values.put(FinanceContract.Transactions.CATEGORY_ID, mTransaction.category);
+                values.put(FinanceContract.Transactions.TRANSACTION_TYPE, mTransaction.type);
+                values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
+                values.put(FinanceContract.Transactions.TRANSACTION_ROOT, mTransaction.id);
+                getContentResolver().update(FinanceContract.Transactions.CONTENT_URI, values, builder.getSelection(), builder.getSelectionArgs());
+            }
             this.finish();
             return true;
         }
@@ -163,8 +188,8 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
                 root = mTransaction.root;
             }
             SelectionBuilder builder = new SelectionBuilder();
-            builder.where(FinanceContract.Transactions.TRANSACTION_ROOT + "=?", root);
-            builder.where(true, FinanceContract.Transactions.TRANSACTION_ID + "=?", root);
+            builder.where(FinanceContract.Transactions.TRANSACTION_ROOT + "=? OR "
+                    + FinanceContract.Transactions.TRANSACTION_ID + "=?", root, root);
             getContentResolver().delete(FinanceContract.Transactions.CONTENT_URI, builder.getSelection(), builder.getSelectionArgs());
         } else {
             if (mTransaction.root != null) {
