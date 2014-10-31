@@ -36,7 +36,7 @@ import com.mad.qut.budgetr.utils.SelectionBuilder;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class OverviewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, PeriodPickerFragment.PeriodPickerListener {
+public class OverviewFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, PeriodPickerFragment.Listener {
 
     private static final String TAG = OverviewFragment.class.getSimpleName();
 
@@ -93,7 +93,7 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View view = inflater.inflate(R.layout.fragment_overview, container, false);
 
-        btPeriod = (Button) view.findViewById(R.id.period);
+        btPeriod = (Button) view.findViewById(R.id.period_picker);
         setPeriodButton();
         btPeriod.setOnClickListener(this);
 
@@ -145,15 +145,11 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
 
 
     @Override
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        Bundle selection = ((PeriodPickerFragment) dialog).getSelection();
-        long newStartDate = selection.getLong(STATE_START_DATE);
-        long newEndDate = selection.getLong(STATE_END_DATE);
-
-        if (mStartDate != newStartDate || mEndDate != newEndDate) {
-            mStartDate = newStartDate;
-            mEndDate = newEndDate;
-            mPeriod = selection.getInt(STATE_PERIOD);
+    public void onPeriodPicked(long startDate, long endDate, int currentPeriod) {
+        if (mStartDate != startDate || mEndDate != endDate) {
+            mStartDate = startDate;
+            mEndDate = endDate;
+            mPeriod = currentPeriod;
             setPeriodButton();
 
             resetCharts();
@@ -161,11 +157,6 @@ public class OverviewFragment extends Fragment implements LoaderManager.LoaderCa
             getLoaderManager().restartLoader(BalanceChartQuery._TOKEN, null, this);
             getLoaderManager().restartLoader(ExpenseChartQuery._TOKEN, null, this);
         }
-    }
-
-    @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
-        Log.d(TAG, "negative");
     }
 
     private void setPeriodButton() {

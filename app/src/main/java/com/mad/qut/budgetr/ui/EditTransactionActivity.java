@@ -13,6 +13,8 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,11 +29,16 @@ import com.mad.qut.budgetr.provider.FinanceContract;
 import com.mad.qut.budgetr.ui.widget.CategoryGridAdapter;
 import com.mad.qut.budgetr.ui.widget.CategoryGridView;
 import com.mad.qut.budgetr.ui.widget.CurrencyEditText;
+import com.mad.qut.budgetr.ui.widget.TransactionDeleteDialogFragment;
 import com.mad.qut.budgetr.utils.DateUtils;
+import com.mad.qut.budgetr.utils.SelectionBuilder;
 
 import java.util.Calendar;
 
-public class EditTransactionActivity extends BaseActivity implements DatePickerDialog.OnDateSetListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class EditTransactionActivity extends BaseActivity implements DatePickerDialog.OnDateSetListener,
+        LoaderManager.LoaderCallbacks<Cursor>,
+        TransactionDeleteDialogFragment.Listener,
+        View.OnClickListener {
 
     private static final String TAG = EditTransactionActivity.class.getSimpleName();
 
@@ -46,7 +53,6 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
     private Transaction mTransaction;
 
     private Uri updateUri;
-    private Activity mActivity = this;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,14 +79,11 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.repeat]);
         mButtonReminder = (Button) findViewById(R.id.button_reminder);
         mButtonReminder.setText(getResources().getStringArray(R.array.transaction_repeats)[mTransaction.reminder]);
+        if (mTransaction.reminder != FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+            mButtonReminder.setEnabled(true);
+        }
         Button mDelete = (Button) findViewById(R.id.delete);
-        mDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getContentResolver().delete(updateUri, null, null);
-                mActivity.finish();
-            }
-        });
+        mDelete.setOnClickListener(this);
         mAmountEdit = (CurrencyEditText) findViewById(R.id.amount);
         mCategoriesGrid = (CategoryGridView) findViewById(R.id.categories);
     }
@@ -104,9 +107,6 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mAmountEdit.getCurrencyValue() == 0) {
@@ -118,15 +118,9 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
                 return true;
             }
             // INSERT INTO DB
-            ContentValues values = new ContentValues();
-            values.put(FinanceContract.Transactions.TRANSACTION_ID, mTransaction.id);
-            values.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, mAmountEdit.getCurrencyValue());
-            values.put(FinanceContract.Transactions.TRANSACTION_DATE, mTransaction.date);
-            values.put(FinanceContract.Transactions.TRANSACTION_REPEAT, mTransaction.repeat);
-            values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
-            values.put(FinanceContract.Transactions.TRANSACTION_TYPE, mTransaction.type);
-            values.put(FinanceContract.Transactions.CATEGORY_ID, mCategoriesGrid.getSelection());
-            getContentResolver().update(updateUri, values, null, null);
+            mTransaction.amount = mAmountEdit.getCurrencyValue();
+            mTransaction.category = mCategoriesGrid.getSelection();
+            getContentResolver().update(updateUri, mTransaction.create(), null, null);
             this.finish();
             return true;
         }
@@ -160,6 +154,49 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
     }
 
+    @Override
+    public void onDelete(int id, boolean options) {
+        if (options && id == 1) {
+            // delete all related transactions
+            String root = mTransaction.id;
+            if (mTransaction.root != null) {
+                root = mTransaction.root;
+            }
+            SelectionBuilder builder = new SelectionBuilder();
+            builder.where(FinanceContract.Transactions.TRANSACTION_ROOT + "=?", root);
+            builder.where(true, FinanceContract.Transactions.TRANSACTION_ID + "=?", root);
+            getContentResolver().delete(FinanceContract.Transactions.CONTENT_URI, builder.getSelection(), builder.getSelectionArgs());
+        } else {
+            if (mTransaction.root != null) {
+                // update last related transactions and
+                // set repeat to "never"
+                SelectionBuilder builder = new SelectionBuilder();
+                builder.where(FinanceContract.Transactions.TRANSACTION_NEXT + "=?", mTransaction.id);
+                ContentValues values = new ContentValues();
+                values.put(FinanceContract.Transactions.TRANSACTION_REPEAT, FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER);
+                getContentResolver().update(FinanceContract.Transactions.CONTENT_URI, values, builder.getSelection(), builder.getSelectionArgs());
+            }
+            getContentResolver().delete(updateUri, null, null);
+        }
+        finish();
+    }
+
+    /**
+     * On delete button click
+     *
+     * @param view
+     */
+    @Override
+    public void onClick(View view) {
+        DialogFragment deleteDialog = new TransactionDeleteDialogFragment();
+        if (mTransaction.next != null || mTransaction.root != null) {
+            Bundle args = new Bundle();
+            args.putBoolean(TransactionDeleteDialogFragment.SHOW_OPTIONS, true);
+            deleteDialog.setArguments(args);
+        }
+        deleteDialog.show(getFragmentManager(), "deleteDialog");
+    }
+
     public static class DatePickerFragment extends DialogFragment {
 
         @Override
@@ -186,6 +223,13 @@ public class EditTransactionActivity extends BaseActivity implements DatePickerD
     public void onRepeatSet(int selection) {
         mTransaction.repeat = selection;
         mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[selection]);
+        if (selection == FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+            mButtonReminder.setEnabled(false);
+            mTransaction.reminder = selection;
+            mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[selection]);
+        } else {
+            mButtonReminder.setEnabled(true);
+        }
     }
 
     public static class RepeatPickerFragment extends DialogFragment {

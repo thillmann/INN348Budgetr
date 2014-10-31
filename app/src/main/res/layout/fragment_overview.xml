@@ -16,7 +16,7 @@
             android:padding="16dp">
 
             <Button
-                android:id="@+id/period"
+                android:id="@+id/period_picker"
                 android:textSize="16sp"
                 android:gravity="start|center_vertical"
                 android:layout_width="match_parent"

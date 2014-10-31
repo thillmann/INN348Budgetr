@@ -14,7 +14,7 @@ public class FinanceDatabase extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "finance.db";
 
-    private static final int CUR_DATABASE_VERSION = 109;
+    private static final int CUR_DATABASE_VERSION = 113;
 
     private final Context mContext;
 
@@ -35,8 +35,8 @@ public class FinanceDatabase extends SQLiteOpenHelper {
     }
 
     interface References {
+        String TRANSACTION_ID = "REFERENCES " + Tables.TRANSACTIONS + "(" + Transactions.TRANSACTION_ID + ")";
         String CATEGORY_ID = "REFERENCES " + Tables.CATEGORIES + "(" + Categories.CATEGORY_ID + ")";
-        String CURRENCY_ID = "REFERENCES " + Tables.CURRENCIES + "(" + Currencies.CURRENCY_ID + ")";
     }
 
     public FinanceDatabase(Context context) {
@@ -54,6 +54,8 @@ public class FinanceDatabase extends SQLiteOpenHelper {
                 + TransactionsColumns.TRANSACTION_AMOUNT + " DOUBLE NOT NULL DEFAULT 0,"
                 + TransactionsColumns.TRANSACTION_REPEAT + " INTEGER NOT NULL,"
                 + TransactionsColumns.TRANSACTION_REMINDER + " INTEGER NOT NULL,"
+                + TransactionsColumns.TRANSACTION_NEXT + " TEXT " + References.TRANSACTION_ID + ","
+                + TransactionsColumns.TRANSACTION_ROOT + " TEXT " + References.TRANSACTION_ID + ","
                 + Transactions.CATEGORY_ID + " TEXT " + References.CATEGORY_ID + ","
                 + "UNIQUE (" + TransactionsColumns.TRANSACTION_ID + ") ON CONFLICT REPLACE)");
 

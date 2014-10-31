@@ -12,9 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Helper for building selection clauses for {@link android.database.sqlite.SQLiteDatabase}. Each
- * appended clause is combined using {@code AND}. This class is <em>not</em>
- * thread safe.
+ * Helper class for selections. See google iosched sample app.
  */
 public class SelectionBuilder {
     private static final String TAG = SelectionBuilder.class.getSimpleName();
@@ -27,7 +25,9 @@ public class SelectionBuilder {
     private String mHaving = null;
 
     /**
-     * Reset any internal state, allowing this builder to be recycled.
+     * Reset builder
+     *
+     * @return builder
      */
     public SelectionBuilder reset() {
         mTable = null;
@@ -39,8 +39,11 @@ public class SelectionBuilder {
     }
 
     /**
-     * Append the given selection clause to the internal state. Each clause is
-     * surrounded with parenthesis and combined using {@code AND}.
+     * Append "where" clause to query (AND).
+     *
+     * @param selection
+     * @param selectionArgs
+     * @return builder
      */
     public SelectionBuilder where(String selection, String... selectionArgs) {
         if (TextUtils.isEmpty(selection)) {
@@ -49,7 +52,6 @@ public class SelectionBuilder {
                         "Valid selection required when including arguments=");
             }
 
-            // Shortcut when clause is empty
             return this;
         }
 
@@ -65,23 +67,94 @@ public class SelectionBuilder {
         return this;
     }
 
+    /**
+     * Append "where" clause to query (OR).
+     *
+     * @param selection
+     * @param selectionArgs
+     * @return builder
+     */
+    public SelectionBuilder where(boolean useOr, String selection, String... selectionArgs) {
+        if (TextUtils.isEmpty(selection)) {
+            if (selectionArgs != null && selectionArgs.length > 0) {
+                throw new IllegalArgumentException(
+                        "Valid selection required when including arguments=");
+            }
+
+            return this;
+        }
+
+        if (mSelection.length() > 0) {
+            if (useOr) {
+                mSelection.append(" OR ");
+            } else {
+                mSelection.append(" AND ");
+            }
+        }
+
+        mSelection.append("(").append(selection).append(")");
+        if (selectionArgs != null) {
+            Collections.addAll(mSelectionArgs, selectionArgs);
+        }
+
+        return this;
+    }
+
+    /**
+     * Append "where ... is null" clause to query.
+     *
+     * @param isNull
+     * @return builder
+     */
+    public SelectionBuilder isNull(String isNull) {
+        if (TextUtils.isEmpty(isNull)) {
+            return this;
+        }
+
+        if (mSelection.length() > 0) {
+            mSelection.append(" AND ");
+        }
+
+        mSelection.append("(").append(isNull + " IS NULL").append(")");
+
+        return this;
+    }
+
+    /**
+     * Set group by.
+     *
+     * @param groupBy
+     * @return builder
+     */
     public SelectionBuilder groupBy(String groupBy) {
         mGroupBy = groupBy;
         return this;
     }
 
+    /**
+     * Set having.
+     *
+     * @param having
+     * @return builder
+     */
     public SelectionBuilder having(String having) {
         mHaving = having;
         return this;
     }
 
+    /**
+     * Set table.
+     *
+     * @param table
+     * @return builder
+     */
     public SelectionBuilder table(String table) {
         mTable = table;
         return this;
     }
 
     /**
-     * Replace positional params in table. Use for JOIN ON conditions.
+     * Replace positional parameters in table. Use for joins.
      */
     public SelectionBuilder table(String table, String... tableParams) {
         if (tableParams != null && tableParams.length > 0) {
@@ -114,20 +187,10 @@ public class SelectionBuilder {
         return this;
     }
 
-    /**
-     * Return selection string for current internal state.
-     *
-     * @see #getSelectionArgs()
-     */
     public String getSelection() {
         return mSelection.toString();
     }
 
-    /**
-     * Return selection arguments for current internal state.
-     *
-     * @see #getSelection()
-     */
     public String[] getSelectionArgs() {
         return mSelectionArgs.toArray(new String[mSelectionArgs.size()]);
     }
@@ -141,23 +204,10 @@ public class SelectionBuilder {
         }
     }
 
-    @Override
-    public String toString() {
-        return "SelectionBuilder[table=" + mTable + ", selection=" + getSelection()
-                + ", selectionArgs=" + Arrays.toString(getSelectionArgs())
-                + "projectionMap = " + mProjectionMap + " ]";
-    }
-
-    /**
-     * Execute query using the current internal state as {@code WHERE} clause.
-     */
     public Cursor query(SQLiteDatabase db, String[] columns, String orderBy) {
         return query(db, false, columns, orderBy, null);
     }
 
-    /**
-     * Execute query using the current internal state as {@code WHERE} clause.
-     */
     public Cursor query(SQLiteDatabase db, boolean distinct, String[] columns, String orderBy,
                         String limit) {
         assertTable();
@@ -166,19 +216,21 @@ public class SelectionBuilder {
                 mHaving, orderBy, limit);
     }
 
-    /**
-     * Execute update using the current internal state as {@code WHERE} clause.
-     */
     public int update(SQLiteDatabase db, ContentValues values) {
         assertTable();
         return db.update(mTable, values, getSelection(), getSelectionArgs());
     }
 
-    /**
-     * Execute delete using the current internal state as {@code WHERE} clause.
-     */
     public int delete(SQLiteDatabase db) {
         assertTable();
         return db.delete(mTable, getSelection(), getSelectionArgs());
     }
+
+    @Override
+    public String toString() {
+        return "SelectionBuilder[table=" + mTable + ", selection=" + getSelection()
+                + ", selectionArgs=" + Arrays.toString(getSelectionArgs())
+                + "projectionMap = " + mProjectionMap + " ]";
+    }
+
 }

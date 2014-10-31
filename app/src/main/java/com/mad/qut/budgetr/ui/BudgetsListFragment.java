@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,10 +33,7 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
     private static final String TAG = BudgetsListFragment.class.getSimpleName();
 
-    public ListView mListView;
-    public View mEmptyView;
-    public Context mContext;
-
+    private ListView mListView;
     private FloatingActionButton btAdd;
     private BudgetCursorAdapter mListAdapter;
 
@@ -43,7 +41,8 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View root = inflater.inflate(R.layout.fragment_budgets_list, container, false);
         mListView = (ListView) root.findViewById(R.id.budgets_list_view);
-        mEmptyView = root.findViewById(android.R.id.empty);
+        View mEmptyView = root.findViewById(android.R.id.empty);
+        mListView.setEmptyView(mEmptyView);
         btAdd = (FloatingActionButton) root.findViewById(R.id.add);
         btAdd.attachToListView(mListView);
         displayListView();
@@ -51,9 +50,11 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        btAdd.show();
+    public void setMenuVisibility(final boolean visible) {
+        super.setMenuVisibility(visible);
+        if (visible) {
+            btAdd.show();
+        }
     }
 
     @Override
@@ -64,15 +65,12 @@ public class BudgetsListFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        boolean isEmpty = data.getCount() == 0;
         mListAdapter.swapCursor(data);
-        mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mListAdapter.swapCursor(null);
-        mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private void displayListView() {

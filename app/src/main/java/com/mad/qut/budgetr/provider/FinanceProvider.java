@@ -279,7 +279,7 @@ public class FinanceProvider extends ContentProvider {
                         .mapToTable(Tables.TRANSACTIONS + "." + Transactions._ID, Tables.TRANSACTIONS)
                         .mapToTable(Transactions.CATEGORY_ID, Tables.TRANSACTIONS)
                         .where(Transactions.TRANSACTION_DATE + "<=?", currentDate+"")
-                        .groupBy("strftime('%d', " + Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime'), " + Transactions.TRANSACTION_TYPE);
+                        .groupBy("strftime('%d%m%Y', " + Transactions.TRANSACTION_DATE + "/1000, 'unixepoch', 'localtime'), " + Transactions.TRANSACTION_TYPE);
             }
             case BUDGETS: {
                 return builder.table(Tables.BUDGETS_JOIN_CATEGORIES)

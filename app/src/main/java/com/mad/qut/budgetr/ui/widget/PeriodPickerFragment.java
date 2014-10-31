@@ -90,7 +90,7 @@ public class PeriodPickerFragment extends DialogFragment implements View.OnClick
                 c.set(Calendar.DAY_OF_YEAR, 1);
                 break;
             case PERIOD_MONTH:
-                format = "MMMM yyyy";
+                format = "MMM yyyy";
                 unit = Calendar.MONTH;
                 c.set(Calendar.DAY_OF_MONTH, 1);
                 break;
@@ -128,18 +128,8 @@ public class PeriodPickerFragment extends DialogFragment implements View.OnClick
         mPicker.setSelectedItem(selected);
     }
 
-    public Bundle getSelection() {
-        int i = mPicker.getSelectedItem();
-        Bundle selection = new Bundle();
-        selection.putLong("startDate", mValues[i][0]);
-        selection.putLong("endDate", mValues[i][1]);
-        selection.putInt("period", mCurrentPeriod);
-        return selection;
-    }
-
-    public interface PeriodPickerListener {
-        public void onDialogPositiveClick(DialogFragment dialog);
-        public void onDialogNegativeClick(DialogFragment dialog);
+    public interface Listener {
+        public void onPeriodPicked(long startDate, long endDate, int currentPeriod);
     }
 
     @Override
@@ -174,12 +164,13 @@ public class PeriodPickerFragment extends DialogFragment implements View.OnClick
         builder.setView(v)
                 .setPositiveButton(R.string.set, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ((PeriodPickerListener) getTargetFragment()).onDialogPositiveClick(PeriodPickerFragment.this);
+                        int i = mPicker.getSelectedItem();
+                        ((Listener) getTargetFragment()).onPeriodPicked(mValues[i][0], mValues[i][1], mCurrentPeriod);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ((PeriodPickerListener) getTargetFragment()).onDialogNegativeClick(PeriodPickerFragment.this);
+
                     }
                 });
         return builder.create();

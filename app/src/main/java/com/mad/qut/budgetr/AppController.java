@@ -1,6 +1,7 @@
 package com.mad.qut.budgetr;
 
 import android.app.Application;
+import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -8,6 +9,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
+import com.mad.qut.budgetr.service.ReminderService;
 import com.mad.qut.budgetr.utils.LruBitmapCache;
 
 /**

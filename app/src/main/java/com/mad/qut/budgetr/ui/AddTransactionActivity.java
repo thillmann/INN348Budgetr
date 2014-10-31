@@ -5,13 +5,17 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.LoaderManager;
+import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Loader;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,7 +31,9 @@ import com.mad.qut.budgetr.ui.widget.CategoryGridView;
 import com.mad.qut.budgetr.ui.widget.CurrencyEditText;
 import com.mad.qut.budgetr.utils.DateUtils;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.UUID;
 
 public class AddTransactionActivity extends BaseActivity implements DatePickerDialog.OnDateSetListener, LoaderManager.LoaderCallbacks<Cursor> {
@@ -83,7 +89,6 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.transaction, menu);
         return true;
     }
@@ -100,9 +105,6 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_submit) {
             if (mAmountEdit.getCurrencyValue() == 0) {
@@ -113,16 +115,51 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
                 Toast.makeText(this, R.string.toast_no_category, Toast.LENGTH_LONG).show();
                 return true;
             }
-            // INSERT INTO DB
-            ContentValues values = new ContentValues();
-            values.put(FinanceContract.Transactions.TRANSACTION_ID, UUID.randomUUID().toString());
-            values.put(FinanceContract.Transactions.TRANSACTION_AMOUNT, mAmountEdit.getCurrencyValue());
-            values.put(FinanceContract.Transactions.TRANSACTION_DATE, mTransaction.date);
-            values.put(FinanceContract.Transactions.TRANSACTION_REPEAT, mTransaction.repeat);
-            values.put(FinanceContract.Transactions.TRANSACTION_REMINDER, mTransaction.reminder);
-            values.put(FinanceContract.Transactions.TRANSACTION_TYPE, mTransaction.type);
-            values.put(FinanceContract.Transactions.CATEGORY_ID, mCategoriesGrid.getSelection());
-            getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, values);
+            mTransaction.amount = mAmountEdit.getCurrencyValue();
+            mTransaction.category = mCategoriesGrid.getSelection();
+            if (mTransaction.repeat == FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
+                getContentResolver().insert(FinanceContract.Transactions.CONTENT_URI, mTransaction.create());
+            } else {
+                // if repeat is set, create multiple transactions
+                // (original transaction + repeating until now and
+                // one repeating in the future)
+                ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+                // create repeating transactions
+                Calendar c = DateUtils.getClearCalendar();
+                long currentDate = c.getTimeInMillis();
+                mTransaction.setId();
+                String rootId = mTransaction.id;
+                // as long as the next transaction is still before today
+                while (mTransaction.date <= currentDate) {
+                    // clone transaction before
+                    Transaction next = mTransaction.clone();
+                    // set new date
+                    next.nextDate();
+                    // set original transaction as root
+                    next.root = rootId;
+                    // set the id
+                    next.setId();
+                    // set next of before to this transaction
+                    mTransaction.next = next.id;
+                    Log.d(TAG, mTransaction.next);
+                    // add before transaction insert operation to list
+                    operations.add(ContentProviderOperation.newInsert(FinanceContract.Transactions.CONTENT_URI).withValues(mTransaction.create()).build());
+                    // reassign
+                    mTransaction = next;
+                }
+                // to create one transaction in the future
+                mTransaction.next = null;
+                operations.add(ContentProviderOperation.newInsert(FinanceContract.Transactions.CONTENT_URI).withValues(mTransaction.create()).build());
+                try {
+                    if (operations.size() > 0) {
+                        getContentResolver().applyBatch(FinanceContract.CONTENT_AUTHORITY, operations);
+                    }
+                } catch (RemoteException re) {
+                    Log.e(TAG, re.getMessage());
+                } catch (OperationApplicationException oae) {
+                    Log.e(TAG, oae.getMessage());
+                }
+            }
             // Notify changes for budgets
             getContentResolver().notifyChange(FinanceContract.Budgets.CONTENT_URI, null);
 
@@ -155,7 +192,7 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
     public void onDateSet(DatePicker view, int year, int month, int day) {
         Calendar c = DateUtils.getClearCalendar();
         c.set(year, month, day);
-        mTransaction.date = c.getTime().getTime();
+        mTransaction.date = c.getTimeInMillis();
         mButtonDate.setText(DateUtils.getFormattedDate(mTransaction.date, "dd/MM/yyyy"));
     }
 
@@ -187,8 +224,8 @@ public class AddTransactionActivity extends BaseActivity implements DatePickerDi
         mButtonRepeating.setText(getResources().getStringArray(R.array.transaction_repeats)[selection]);
         if (selection == FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER) {
             mButtonReminder.setEnabled(false);
-            mTransaction.reminder = FinanceContract.Transactions.TRANSACTION_REPEAT_NEVER;
-            mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[mTransaction.reminder]);
+            mTransaction.reminder = selection;
+            mButtonReminder.setText(getResources().getStringArray(R.array.transaction_reminders)[selection]);
         } else {
             mButtonReminder.setEnabled(true);
         }

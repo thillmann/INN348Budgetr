@@ -7,12 +7,15 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.BaseColumns;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
@@ -32,19 +35,18 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
 
     private static final String TAG = TransactionsListFragment.class.getSimpleName();
 
-    public ListView mListView;
-    public View mEmptyView;
-
+    private ListView mListView;
+    private FloatingActionButton btAdd;
     private TransactionCursorAdapter mListAdapter;
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View root = inflater.inflate(R.layout.fragment_transactions_list, container, false);
         mListView = (ListView) root.findViewById(R.id.transactions_list_view);
-        mEmptyView = root.findViewById(android.R.id.empty);
-        FloatingActionButton addButton = (FloatingActionButton) root.findViewById(R.id.add);
-        addButton.attachToListView(mListView);
+        View mEmptyView = root.findViewById(android.R.id.empty);
+        mListView.setEmptyView(mEmptyView);
+        btAdd = (FloatingActionButton) root.findViewById(R.id.add);
+        btAdd.attachToListView(mListView);
         displayListView();
         return root;
     }
@@ -53,33 +55,24 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
     public void setMenuVisibility(final boolean visible) {
         super.setMenuVisibility(visible);
         if (visible) {
-            // DO WHEN VISIBLE
+            btAdd.show();
         }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        CursorLoader cursorLoader = new CursorLoader(getActivity(),
+        return new CursorLoader(getActivity(),
                 FinanceContract.Transactions.CONTENT_URI, TransactionQuery.PROJECTION, null, null, FinanceContract.Transactions.DEFAULT_SORT);
-        return cursorLoader;
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        // Swap the new cursor in.  (The framework will take care of closing the
-        // old cursor once we return.)
-        boolean isEmpty = data.getCount() == 0;
         mListAdapter.swapCursor(data);
-        mEmptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        // This is called when the last Cursor provided to onLoadFinished()
-        // above is about to be closed.  We need to make sure we are no
-        // longer using it.
         mListAdapter.swapCursor(null);
-        mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private void displayListView() {
@@ -109,6 +102,8 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
                 transaction.category = category.id;
                 transaction.repeat = cursor.getInt(TransactionQuery.REPEAT);
                 transaction.reminder = cursor.getInt(TransactionQuery.REMINDER);
+                transaction.next = cursor.getString(TransactionQuery.NEXT);
+                transaction.root = cursor.getString(TransactionQuery.ROOT);
                 iTransaction.putExtra("transaction", transaction.toJSON());
 
                 Uri updateUri = Uri.parse(FinanceContract.Transactions.CONTENT_URI + "/" + l);
@@ -131,6 +126,8 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
                 FinanceContract.Transactions.TRANSACTION_AMOUNT,
                 FinanceContract.Transactions.TRANSACTION_REPEAT,
                 FinanceContract.Transactions.TRANSACTION_REMINDER,
+                FinanceContract.Transactions.TRANSACTION_NEXT,
+                FinanceContract.Transactions.TRANSACTION_ROOT,
                 FinanceContract.Categories.CATEGORY_NAME,
                 FinanceContract.Categories.CATEGORY_ID
         };
@@ -142,8 +139,10 @@ public class TransactionsListFragment extends Fragment implements LoaderManager.
         int AMOUNT = 4;
         int REPEAT = 5;
         int REMINDER = 6;
-        int CATEGORY_NAME = 7;
-        int CATEGORY_ID = 8;
+        int NEXT = 7;
+        int ROOT = 8;
+        int CATEGORY_NAME = 9;
+        int CATEGORY_ID = 10;
     }
 
     public class TransactionCursorAdapter extends CursorAdapter {

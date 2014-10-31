@@ -20,6 +20,8 @@ public class FinanceContract {
         String TRANSACTION_AMOUNT   = "transaction_amount";
         String TRANSACTION_REPEAT   = "transaction_repeat";
         String TRANSACTION_REMINDER = "transaction_reminder";
+        String TRANSACTION_NEXT     = "transaction_next";
+        String TRANSACTION_ROOT     = "transaction_root";
     }
 
     interface CategoriesColumns {

@@ -47,6 +47,8 @@
     <string name="dialog_delete_transactions_message">Do you really want to delete all transactions?</string>
     <string name="dialog_about_title">About</string>
     <string name="dialog_about_message">Budgetr was created by Timo Hillmann.</string>
+    <string name="dialog_delete_title">Delete</string>
+    <string name="dialog_message_delete_single">Do you really want to delete this?</string>
 
     <!-- Toasts -->
     <string name="toast_password_failed">You have entered the wrong password!</string>
@@ -138,6 +140,11 @@
         <item>Monthly budget</item>
         <item>Yearly budget</item>
         <item>Endless budget</item>
+    </string-array>
+
+    <string-array name="transaction_delete">
+        <item>Delete only this</item>
+        <item>Delete all related transactions</item>
     </string-array>
 
 </resources>
